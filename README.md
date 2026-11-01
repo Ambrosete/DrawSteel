@@ -1,6 +1,6 @@
 # DrawSteel
 
-Plataforma web de aficionados para gestionar campañas de Draw Steel. Primera versión con React, TypeScript y Vite.
+Plataforma web de aficionados para gestionar campañas de Draw Steel con React, TypeScript y Vite.
 
 ## Desarrollo
 
@@ -11,18 +11,25 @@ npm ci
 npm run dev
 ```
 
+- `npm test`: pruebas de perfiles, recuperación de borradores y separación de personajes.
 - `npm run typecheck`: comprueba los tipos.
 - `npm run build`: comprueba TypeScript y genera la aplicación estática en `dist/`.
 - `npm run preview`: sirve la compilación localmente.
 
-La navegación utiliza fragmentos (`#personajes`) para funcionar en alojamiento estático sin configurar redirecciones. La pantalla de personajes permite buscar y crear registros de nivel 1, inicialmente con datos de ejemplo. Los cambios se guardan en `localStorage` del navegador; no se sincronizan entre dispositivos. No hay autenticación ni backend. Las fichas no validan todavía las reglas oficiales. Campañas, combate y reglas tienen pantallas informativas pendientes de implementación.
+## Entrada y personajes
+
+El flujo es **perfil → campaña Tyranny → elegir o crear personaje → mesa de juego**. Se ofrecen Gabriel, David, Mateo, Adrián, Andrés y Quique. Gabriel tiene la contraseña local solicitada; los demás perfiles entran sin contraseña. Se vuelve a elegir perfil al recargar.
+
+Este control de entrada se ejecuta en el navegador: no constituye autenticación segura. La contraseña está en el código cliente. Los perfiles separan las listas en la interfaz, pero cualquier usuario con acceso al navegador puede leer o modificar el almacenamiento. No hay backend, sincronización entre dispositivos ni permisos de Director.
+
+Los personajes antiguos y de ejemplo se eliminan de la colección `drawsteel.characters.v1` al abrir esta versión. La nueva colección `drawsteel.characters.v2` comienza vacía. Cada borrador queda vinculado a su perfil y a Tyranny, y se guarda en `localStorage`. Si no se puede guardar, la aplicación avisa de que los cambios solo durarán la sesión.
+
+El creador incluye selectores de raza/ascendencia, fondo, clase, kit, complicación y cinco características. **El catálogo de las páginas 21–283 de Draw Steel Heroes v1.01b está pendiente de importar:** el adjunto excede el límite de transferencia de 32 MiB y no pudo leerse. Hasta recibir una copia accesible, los selectores permiten introducir opciones propias y reutilizar las de los borradores del mismo perfil. No se han inventado listas del manual ni se valida la distribución de características o las restricciones de creación. Los registros se identifican como borradores y se pueden seleccionar y consultar en la mesa.
+
+Para completar el creador es necesaria una versión comprimida del PDF o las páginas indicadas divididas en archivos de menos de 32 MiB. Campañas compartidas, progresión, tablero y combate siguen pendientes.
 
 ## GitHub Pages
 
-La base de Vite es `/DrawSteel/`, correspondiente al nombre de este repositorio. Para otro nombre o un dominio propio, ajusta `base` en `vite.config.ts`.
+La navegación utiliza fragmentos (`#personajes`) para funcionar sin redirecciones en alojamiento estático. La base de Vite es `/DrawSteel/`. Para otro nombre de repositorio o un dominio propio, ajusta `base` en `vite.config.ts`.
 
-En GitHub, selecciona **Settings → Pages → Build and deployment → Source: GitHub Actions**. El workflow `.github/workflows/pages.yml` instala con `npm ci`, compila y publica `dist/` cuando se envían cambios a `main`; también permite ejecución manual. El despliegue requiere que Pages esté habilitado y los permisos del repositorio permitan el workflow. No se ha publicado automáticamente durante el desarrollo inicial.
-
-## Alcance futuro
-
-Fichas y progresión de personajes, campañas compartidas, tiradas de dados, tablero interactivo y combates semiautomáticos supervisados por el Director.
+En GitHub, selecciona **Settings → Pages → Build and deployment → Source: GitHub Actions**. El workflow `.github/workflows/pages.yml` instala con `npm ci`, compila y publica `dist/` cuando se envían cambios a `main`; también permite ejecución manual. El despliegue requiere Pages habilitado y los permisos correspondientes.
