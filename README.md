@@ -24,9 +24,13 @@ Este control de entrada se ejecuta en el navegador: no constituye autenticación
 
 Los personajes antiguos y de ejemplo se eliminan de la colección `drawsteel.characters.v1` al abrir esta versión. La nueva colección `drawsteel.characters.v2` comienza vacía. Cada borrador queda vinculado a su perfil y a Tyranny, y se guarda en `localStorage`. Si no se puede guardar, la aplicación avisa de que los cambios solo durarán la sesión.
 
-El creador incluye selectores de raza/ascendencia, fondo, clase, kit, complicación y cinco características. **El catálogo de las páginas 21–283 de Draw Steel Heroes v1.01b está pendiente de importar:** el adjunto excede el límite de transferencia de 32 MiB y no pudo leerse. Hasta recibir una copia accesible, los selectores permiten introducir opciones propias y reutilizar las de los borradores del mismo perfil. No se han inventado listas del manual ni se valida la distribución de características o las restricciones de creación. Los registros se identifican como borradores y se pueden seleccionar y consultar en la mesa.
+El creador utiliza el catálogo de **Draw Steel Heroes v1.01b**, extraído del PDF comprimido aportado por el usuario: 12 ascendencias, 18 carreras, 9 clases, 21 kits y 100 complicaciones. Los nombres permanecen en inglés y cada selección muestra la página impresa y su posición en el PDF completo. El archivo recortado contiene 263 páginas: corresponde a las páginas 21–283 del PDF completo, numeradas 6–268 en el libro. El catálogo está en `src/rules-catalog.ts`; el PDF no se distribuye con la aplicación.
 
-Para completar el creador es necesaria una versión comprimida del PDF o las páginas indicadas divididas en archivos de menos de 32 MiB. Campañas compartidas, progresión, tablero y combate siguen pendientes.
+El fondo combina carrera y cultura: se eligen entorno, organización, crianza e idioma cultural (además de Caelian). Las características de nivel 1 se eligen entre las permutaciones válidas para la clase, respetando sus valores fijos de 2 y los conjuntos del apartado Basics. Censor, Fury, Shadow y Troubadour tienen un kit; Tactician elige dos; Conduit, Elementalist, Null y Talent no utilizan kit inicialmente. Las bonificaciones de dos kits no se suman automáticamente. La complicación es opcional.
+
+Los personajes siguen siendo **borradores**: faltan subclases, compra de rasgos de ascendencia, habilidades, habilidades de clase, ventajas y efectos mecánicos de las complicaciones. El catálogo y las validaciones anteriores no equivalen a una ficha completamente automatizada. Los borradores propios guardados anteriormente se mantienen y se pueden consultar, aunque sus opciones no procedan del catálogo.
+
+`npm test` comprueba la recuperación de personajes, perfiles, integridad del catálogo, distribuciones de las nueve clases y restricciones de kits. Campañas compartidas, progresión, tablero y combate siguen pendientes.
 
 ## GitHub Pages
 

@@ -11,6 +11,9 @@ export type Character = {
   background: string
   heroClass: string
   kit: string
+  secondKit?: string
+  culture?: { environment: string; organization: string; upbringing: string; language: string }
+  rulesVersion?: '1.01b'
   complication: string
   characteristics: Record<Characteristic, number>
   status: 'draft'
@@ -24,6 +27,9 @@ export function isCharacter(value: unknown): value is Character {
   const scores = c.characteristics as Record<string, unknown> | undefined
   return ['id', 'name', 'ancestry', 'background', 'heroClass', 'kit'].every(key => typeof c[key] === 'string' && (c[key] as string).trim().length > 0)
     && typeof c.complication === 'string'
+    && (c.secondKit === undefined || typeof c.secondKit === 'string')
+    && (c.culture === undefined || (!!c.culture && typeof c.culture === 'object' && ['environment', 'organization', 'upbringing', 'language'].every(key => typeof (c.culture as Record<string, unknown>)[key] === 'string')))
+    && (c.rulesVersion === undefined || c.rulesVersion === '1.01b')
     && profiles.includes(c.owner as Profile) && c.campaign === 'Tyranny' && c.status === 'draft'
     && !!scores && characteristicNames.every(key => typeof scores[key] === 'number' && Number.isInteger(scores[key]) && Number(scores[key]) >= -2 && Number(scores[key]) <= 3)
 }
