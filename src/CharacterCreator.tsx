@@ -4,7 +4,7 @@ import type { Training } from './progression'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { characteristicNames } from './characters'
-import type { Character, Profile } from './characters'
+import type { Character } from './characters'
 import { ancestries, careers, classes, kits, stormKits, complications, environments, organizations, upbringings, cultureLanguages } from './rules-catalog'
 import type { CatalogOption } from './rules-catalog'
 import { characteristicChoices, hasValidKits, hasValidScores } from './creation-rules'
@@ -19,8 +19,8 @@ function CatalogSelect({ name, label, options, optional = false, value, onChange
   const selected = value ?? localValue
   return <div><label htmlFor={name}>{label}<select id={name} name={name} required={!optional} value={selected} onChange={e => { setLocalValue(e.target.value); onChange?.(e.target.value) }}><option value="">{optional ? 'Sin complicación' : 'Selecciona una opción…'}</option>{options.map(option => <option key={option.name} value={option.name}>{option.name}</option>)}</select></label><Source option={options.find(option => option.name === selected)} /></div>
 }
-export default function CharacterCreator({ profile, onSave, onCancel }: {
-  profile: Profile; onSave: (character: Character) => void; onCancel: () => void
+export default function CharacterCreator({ profile, campaignName = 'Tyranny', displayName = profile, onSave, onCancel }: {
+  profile: string; campaignName?: string; displayName?: string; onSave: (character: Character) => void; onCancel: () => void
 }) {
   const [heroClass, setHeroClass] = useState('')
   const [training, setTraining] = useState<Training>({ subclasses: [], choices: {} })
@@ -70,6 +70,6 @@ export default function CharacterCreator({ profile, onSave, onCancel }: {
     </> : <p className="intro">Selecciona una clase para ver sus distribuciones válidas de nivel 1.</p>}</fieldset>
     <fieldset><legend>Complicación</legend><p className="intro">Opcional. Cada complicación tiene un beneficio y una contrapartida: consulta su página y acuerda sus efectos con el Director.</p><CatalogSelect name="complication" label="Complicación" options={complications} optional /></fieldset>
     {error && <p className="error" role="alert">{error}</p>}
-    <div className="creator-actions"><span>Tyranny · {profile} · Nivel 1 · Borrador</span><button type="submit">Guardar y elegir personaje ↗</button></div>
+    <div className="creator-actions"><span>{campaignName} · {displayName} · Nivel 1 · Borrador</span><button type="submit">Guardar y elegir personaje ↗</button></div>
   </form>
 }

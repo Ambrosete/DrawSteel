@@ -1,0 +1,48 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Open shared table, explicitly without Firebase Authentication.
+    // Only the campaign paths below are public; all other paths remain denied.
+    function validCampaign(data) {
+      return data.keys().hasOnly(['name', 'ownerId', 'memberIds', 'notes', 'revision', 'updatedAt'])
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 80
+        && data.ownerId is string && data.ownerId.size() > 0 && data.ownerId.size() <= 128
+        && (!('memberIds' in data) || data.memberIds is list)
+        && data.notes is string && data.notes.size() <= 30000
+        && data.revision is int && data.updatedAt == request.time;
+    }
+    match /campaigns/{campaignId} {
+      allow read: if true;
+      allow create: if validCampaign(request.resource.data)
+        && request.resource.data.revision == 1;
+      allow update: if validCampaign(request.resource.data)
+        && request.resource.data.revision == resource.data.revision + 1
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['notes', 'revision', 'updatedAt']);
+      match /characters/{characterId} {
+        function validCharacter(data) {
+          return data.keys().hasAll(['id', 'owner', 'campaign', 'name', 'ancestry', 'background', 'heroClass', 'kit', 'complication', 'characteristics', 'status', 'revision', 'updatedAt'])
+            && data.keys().hasOnly(['id', 'owner', 'campaign', 'name', 'ancestry', 'background', 'heroClass', 'kit', 'complication', 'characteristics', 'status', 'revision', 'updatedAt', 'level', 'training', 'secondKit', 'culture', 'rulesVersion'])
+            && data.id == characterId && data.campaign == campaignId
+            && data.owner is string && data.owner.size() > 0 && data.owner.size() <= 128 && data.status == 'draft'
+            && data.name is string && data.name.size() > 0 && data.name.size() <= 80
+            && data.ancestry is string && data.background is string
+            && data.heroClass is string && data.kit is string && data.complication is string
+            && data.characteristics is map
+            && data.characteristics.keys().hasOnly(['Fuerza', 'Agilidad', 'Razón', 'Intuición', 'Presencia'])
+            && score(data.characteristics['Fuerza']) && score(data.characteristics['Agilidad'])
+            && score(data.characteristics['Razón']) && score(data.characteristics['Intuición']) && score(data.characteristics['Presencia'])
+            && (!('level' in data) || (data.level is int && data.level >= 1 && data.level <= 10))
+            && data.revision is int && data.updatedAt == request.time;
+        }
+        function score(value) { return value is int && value >= -2 && value <= 5; }
+        function campaignExists() { return exists(/databases/$(database)/documents/campaigns/$(campaignId)); }
+        allow read: if true;
+        allow create: if campaignExists() && validCharacter(request.resource.data) && request.resource.data.revision == 1;
+        allow update: if campaignExists() && validCharacter(request.resource.data)
+          && request.resource.data.owner == resource.data.owner
+          && request.resource.data.revision == resource.data.revision + 1;
+        allow delete: if campaignExists();
+      }
+    }
+  }
+}
