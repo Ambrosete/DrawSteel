@@ -3,15 +3,22 @@ import App from './App'
 import DeleteCampaignDialog from './DeleteCampaignDialog'
 import { firebaseConfigured } from './firebase'
 import { profiles } from './characters'
-import { createCampaign, editCampaign, watchCampaigns, watchCharacters, saveSharedCharacter, deleteSharedCharacter, deleteSharedCampaign } from './cloud-store'
+import { createCampaign, editCampaign, watchCampaigns, watchCharacters, saveSharedCharacter, deleteSharedCharacter, deleteSharedCampaign, transferSharedCharacter } from './cloud-store'
 import type { Campaign, SharedCharacter } from './cloud-model'
 import type { Character, Profile } from './characters'
+import { readSavedSession, saveSession, sharedSessionKey, readLocalMode, saveLocalMode } from './saved-session'
+import { readResumeView, saveResumeView } from './resume-view'
 
 export type CloudSession = {
   profileName: string
   displayName: string
   campaign: Campaign
   characters: SharedCharacter[]
+  campaigns: Campaign[]
+  selectedCharacterId: string | null
+  selectCharacter: (id: string | null) => void
+  reconnecting: boolean
+  transfer: (character: Character, destinationId: string) => Promise<void>
   save: (character: Character, revision: number) => Promise<void>
   remove: (character: Character) => Promise<void>
   leave: () => void
@@ -24,13 +31,16 @@ function errorText(error: unknown) {
   return error instanceof Error ? error.message : 'No se ha podido completar la operación. Vuelve a intentarlo.'
 }
 export default function CloudApp() {
-  const [local, setLocal] = useState(false)
-  const [profileName, setProfileName] = useState<Profile | null>(null)
-  const [choice, setChoice] = useState<Profile>('Gabriel')
-  const [campaigns, setCampaigns] = useState<Campaign[]>([])
-  const [activeId, setActiveId] = useState<string | null>(null)
-  const [characters, setCharacters] = useState<SharedCharacter[]>([])
-  const [readyId, setReadyId] = useState<string | null>(null)
+  const [restored] = useState(() => readSavedSession(sharedSessionKey))
+  const [restoredView] = useState(() => readResumeView(restored.profile, restored.campaignId))
+  const [local, setLocal] = useState(readLocalMode)
+  const [profileName, setProfileName] = useState<Profile | null>(restored.profile)
+  const [choice, setChoice] = useState<Profile>(restored.profile ?? 'Gabriel')
+  const [campaigns, setCampaigns] = useState<Campaign[]>(restoredView ? [restoredView.campaign] : [])
+  const [activeId, setActiveId] = useState<string | null>(restored.campaignId)
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(restored.characterId)
+  const [characters, setCharacters] = useState<SharedCharacter[]>(restoredView?.characters ?? [])
+  const [readyId, setReadyId] = useState<string | null>(restoredView?.campaign.id ?? null)
   const [cached, setCached] = useState(true)
   const [campaignsCached, setCampaignsCached] = useState(true)
   const [error, setError] = useState('')
@@ -40,21 +50,30 @@ export default function CloudApp() {
   const [deleteBusy, setDeleteBusy] = useState(false)
   const [deleteError, setDeleteError] = useState('')
   const active = campaigns.find(c => c.id === activeId && !c.deleting)
+  useEffect(() => { saveLocalMode(local) }, [local])
+  useEffect(() => {
+    if (!local) saveSession(sharedSessionKey, { profile: profileName, campaignId: activeId, characterId: selectedCharacterId })
+  }, [local, profileName, activeId, selectedCharacterId])
+  useEffect(() => {
+    if (local) return
+    if (!profileName || !activeId) saveResumeView(null)
+    else if (active && readyId === active.id && !cached && !campaignsCached) saveResumeView({ profile: profileName, campaign: active, characters })
+  }, [local, profileName, activeId, active, readyId, cached, campaignsCached, characters])
   useEffect(() => {
     if (!firebaseConfigured || !profileName || local) return
-    return watchCampaigns((data, fromCache) => { setCampaigns(data); setCampaignsCached(fromCache); setError(''); setActiveId(previous => data.some(c => c.id === previous && !c.deleting) ? previous : null) }, e => { setCampaigns([]); setActiveId(null); setError(errorText(e)) })
+    return watchCampaigns((data, fromCache) => { setCampaignsCached(fromCache); if (fromCache && !data.length) return; setCampaigns(data); setError(''); if (!fromCache) setActiveId(previous => data.some(c => c.id === previous && !c.deleting) ? previous : null) }, e => { setCampaigns([]); setActiveId(null); setError(errorText(e)) })
   }, [profileName, local])
   useEffect(() => {
-    setCharacters([]); setReadyId(null); setCached(true)
-    if (!activeId || !profileName || local) return
-    return watchCharacters(activeId, (data, fromCache) => { setCharacters(data); setCached(fromCache); setReadyId(activeId) }, e => { setCharacters([]); setReadyId(null); setError(errorText(e)) })
+    setCharacters(previous => previous.every(c => c.campaign === activeId) ? previous : []); setReadyId(previous => previous === activeId ? previous : null); setCached(true)
+    if (!activeId || !profileName || local) { if (!local) setSelectedCharacterId(null); return }
+    return watchCharacters(activeId, (data, fromCache) => { setCached(fromCache); if (fromCache && !data.length) return; setCharacters(data); setReadyId(activeId); if (!fromCache) setSelectedCharacterId(previous => data.some(c => c.id === previous) ? previous : null) }, e => { setCharacters([]); setReadyId(null); setError(errorText(e)) })
   }, [activeId, profileName, local])
   async function action(work: () => Promise<unknown>) {
     if (busy) return
     setBusy(true); setError('')
     try { await work() } catch (e) { setError(errorText(e)) } finally { setBusy(false) }
   }
-  function changeProfile() { setProfileName(null); setActiveId(null); setCampaigns([]); setCharacters([]); setCampaignsCached(true); setError('') }
+  function changeProfile() { setProfileName(null); setActiveId(null); setSelectedCharacterId(null); setCampaigns([]); setCharacters([]); setCampaignsCached(true); setError('') }
   async function confirmDelete() {
     if (!deleteTarget || deleteBusy) return
     setDeleteBusy(true); setDeleteError('')
@@ -71,10 +90,13 @@ export default function CloudApp() {
   if (!profileName) return <div className="entry-shell"><main className="entry-panel"><h1>¿Quién se sienta<br />a la mesa?</h1><p className="intro">Elige un perfil para organizar tus personajes y entrar a las campañas compartidas.</p><form className="login-form" onSubmit={e => { e.preventDefault(); setProfileName(choice) }}><label>Perfil<select value={choice} onChange={e => setChoice(e.target.value as Profile)}>{profiles.map(p => <option key={p}>{p}</option>)}</select></label><button>Entrar a la mesa</button></form><p className="local-note">Mesa abierta, sin cuentas ni contraseñas. Cualquier visitante puede consultar y editar las campañas y sus personajes.</p><button className="secondary" onClick={() => setLocal(true)}>Consultar mis datos locales</button></main></div>
   if (active && readyId === active.id) {
     const session: CloudSession = {
-      profileName, displayName: profileName, campaign: active, characters,
+      profileName, displayName: profileName, campaign: active, characters, campaigns: campaigns.filter(c => !c.deleting),
+      selectedCharacterId, selectCharacter: setSelectedCharacterId,
+      reconnecting: cached || campaignsCached,
+      transfer: (character, destinationId) => transferSharedCharacter(active.id, destinationId, character as SharedCharacter),
       save: (character, revision) => saveSharedCharacter(active.id, profileName, character, revision),
       remove: character => deleteSharedCharacter(active.id, character as SharedCharacter),
-      leave: () => setActiveId(null), logout: changeProfile,
+      leave: () => { setActiveId(null); setSelectedCharacterId(null) }, logout: changeProfile,
     }
     return <><div className="cloud-banner" role="status">{cached || campaignsCached ? 'Consultando datos guardados · Esperando conexión' : 'Mesa abierta · Cambios compartidos en tiempo real'}</div><App key={`${active.id}-${profileName}`} cloud={session} /><CampaignJournal key={`journal-${active.id}`} campaign={active} /></>
   }

@@ -4,8 +4,27 @@ import { assertRevision, isSharedCharacter } from './cloud-model'
 import type { Campaign, SharedCharacter } from './cloud-model'
 import type { Character } from './characters'
 import { deleteCampaignInStages } from './campaign-deletion'
+import { prepareCharacterTransfer } from './character-transfer'
 
 function database() { if (!db) throw new Error('Firebase no está configurado.'); return db }
+export async function transferSharedCharacter(sourceId: string, destinationId: string, character: SharedCharacter) {
+  if (sourceId === destinationId) throw new Error('Elige una campaña diferente a la de origen.')
+  await runTransaction(database(), async tx => {
+    const source = await tx.get(doc(database(), 'campaigns', sourceId))
+    const destination = await tx.get(doc(database(), 'campaigns', destinationId))
+    if (!source.exists() || source.data().deleting) throw new Error('La campaña de origen no está disponible o se está eliminando.')
+    if (!destination.exists() || destination.data().deleting) throw new Error('La campaña de destino no está disponible o se está eliminando.')
+    const sourceRef = doc(database(), 'campaigns', sourceId, 'characters', character.id)
+    const destinationRef = doc(database(), 'campaigns', destinationId, 'characters', character.id)
+    const current = await tx.get(sourceRef)
+    const occupied = await tx.get(destinationRef)
+    if (!current.exists()) throw new Error('El personaje ya se ha transferido o eliminado desde otra sesión.')
+    assertRevision(current.data().revision, character.revision)
+    const moved = prepareCharacterTransfer({ ...current.data(), id: current.id } as SharedCharacter, destinationId, occupied.exists())
+    tx.set(destinationRef, { ...moved, updatedAt: serverTimestamp() })
+    tx.delete(sourceRef)
+  })
+}
 export function watchCampaigns(receive: (campaigns: Campaign[], cached: boolean) => void, fail: (error: Error) => void) {
   return onSnapshot(collection(database(), 'campaigns'), { includeMetadataChanges: true }, snapshot => {
     receive(snapshot.docs.map(d => ({ ...d.data(), id: d.id }) as Campaign), snapshot.metadata.fromCache)

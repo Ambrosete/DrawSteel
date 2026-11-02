@@ -42,6 +42,7 @@ Ese inicio de sesión corresponde a la herramienta de administración en tu orde
 4. Las notas del cuaderno se comparten con todos los visitantes.
 5. Cada campaña mantiene su colección de personajes y sus notas independientes.
 6. En la lista de campañas, **Eliminar campaña** abre un diálogo que identifica la campaña y pide confirmación. Al confirmar se borran todos sus personajes, sus notas y la campaña. No hay recuperación automática.
+7. En la lista de personajes o en una ficha, **Transferir personaje** permite moverlo a otra campaña disponible. Se conservan todos sus datos y deja de aparecer en origen. El destino no puede contener ya una ficha con el mismo identificador. El movimiento es atómico y comprueba que ambas campañas siguen disponibles y que el personaje no ha cambiado desde que se abrió el diálogo. No requiere cambios adicionales en las reglas.
 
 Para activar este botón debes volver a publicar la versión actual de `firestore.rules`: las reglas anteriores rechazaban la eliminación de campañas. La aplicación marca primero la campaña con `deleting: true`, lo que bloquea nuevas fichas y ediciones. Después elimina los personajes por lotes de hasta 400 y, al terminar, elimina el documento de campaña con sus notas. Si se interrumpe, aparece **Reintentar eliminación** para completar la limpieza; la campaña no puede abrirse mientras está marcada. No se modifican datos de otras campañas.
 
@@ -52,6 +53,7 @@ El modo local del prototipo sigue disponible mediante **Consultar mis datos loca
 - `campaigns/{id}`: nombre, perfil creador (`ownerId`, solo metadato), notas, revisión y fecha del servidor. El antiguo campo `memberIds` se tolera en documentos anteriores, pero no se utiliza para controlar acceso.
 - `campaigns/{id}/characters/{id}`: ficha, perfil de origen (`owner`, solo metadato), campaña, revisión y fecha del servidor.
 - Los listeners reciben cambios mientras la mesa está abierta. Las transacciones verifican la revisión de notas y progresión para rechazar guardados obsoletos.
+- Una transferencia lee la ficha actual en el servidor y la guarda en destino con revisión 1; el identificador y su perfil se conservan. Se evita sobrescribir otra ficha y una transferencia obsoleta falla sin borrar el original. Ambas listas reciben el cambio mediante sus listeners.
 - Ante un conflicto de notas, copia tu borrador y utiliza **Cargar versión compartida**. En progresión, cancela y vuelve a abrir la mejora para partir de la ficha actual.
 - Las transacciones necesitan conexión al servidor. Un error mantiene el formulario abierto; la barra indica si los datos proceden de caché.
 - Todavía no hay notas privadas, tablero ni combate.
