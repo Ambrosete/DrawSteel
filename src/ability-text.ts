@@ -1,22 +1,33 @@
 export type AbilityTextBlock =
-  | { kind: 'text' | 'quote'; text: string }
+  | { kind: 'text' | 'quote' | 'keywords' | 'distance'; text: string }
   | { kind: 'roll'; title: string; tiers: { label: string; text: string }[] }
 
 const section = /^(?:Effect|Trigger|Special|Strained|Persistent\s+\d+|Spend\s+[^:]+|Mark Benefit)\s*:/i
 const metadata = /^(?:Distance\s*:|x\s|(?:Main action|Maneuver|Triggered action|Free triggered action|Free maneuver|Free action|Move action|No action|—)$)/i
 const keywords = /^(?:[A-Za-z-]+,\s*)+[A-Za-z-]+$/
+const singleKeyword = /^(?:Area|Magic|Melee|Ranged|Strike|Weapon|Green|Rot|Fire|Void|Earth|Psionic|Charge|Chronopathy|Cryokinesis|Pyrokinesis|Telekinesis|Telepathy|Resopathy|Metamorphosis|Animapathy)$/i
 const tier = /^(≤\s*11|12\s*[–-]\s*16|17\s*\+|≥\s*17)\s*:\s*(.*)$/
 const reflow = (text: string) => text.replace(/\s+/g, ' ').trim()
 
 // PDF line wraps are presentation artifacts, not the width of the web card.
 export function formatAbilityText(details: string): AbilityTextBlock[] {
   const lines = details.split(/\r?\n/).map(line => line.trim())
+  const distanceIndex = lines.findIndex(line => /^Distance\s*:/i.test(line))
   const blocks: AbilityTextBlock[] = []
   let paragraph: string[] = []
   const flush = () => { if (paragraph.length) { blocks.push({ kind: 'text', text: reflow(paragraph.join(' ')) }); paragraph = [] } }
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
     if (!line) { flush(); continue }
+    if (i < distanceIndex && (keywords.test(line) || singleKeyword.test(line))) {
+      flush(); blocks.push({ kind: 'keywords', text: reflow(line) }); continue
+    }
+    if (/^Distance\s*:/i.test(line)) {
+      flush()
+      const range = [line]
+      while (i + 1 < lines.length && lines[i + 1] && !metadata.test(lines[i + 1]) && !section.test(lines[i + 1]) && !/^Power Roll\b/.test(lines[i + 1])) range.push(lines[++i])
+      blocks.push({ kind: 'distance', text: reflow(range.join(' ')) }); continue
+    }
     const quoteEnd = line.startsWith('“') ? '”' : line.startsWith('«') ? '»' : line.startsWith('"') ? '"' : null
     if (quoteEnd) {
       let end = i
