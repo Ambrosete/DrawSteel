@@ -1,8 +1,9 @@
-import { collection, doc, onSnapshot, runTransaction, setDoc, serverTimestamp } from 'firebase/firestore'
+import { collection, doc, onSnapshot, runTransaction, setDoc, serverTimestamp, query, limit, getDocsFromServer, writeBatch } from 'firebase/firestore'
 import { db } from './firebase'
 import { assertRevision, isSharedCharacter } from './cloud-model'
 import type { Campaign, SharedCharacter } from './cloud-model'
 import type { Character } from './characters'
+import { deleteCampaignInStages } from './campaign-deletion'
 
 function database() { if (!db) throw new Error('Firebase no está configurado.'); return db }
 export function watchCampaigns(receive: (campaigns: Campaign[], cached: boolean) => void, fail: (error: Error) => void) {
@@ -27,6 +28,7 @@ export async function editCampaign(campaign: Campaign, changes: { notes: string 
     const ref = doc(database(), 'campaigns', campaign.id)
     const snapshot = await tx.get(ref)
     if (!snapshot.exists()) throw new Error('La campaña ya no está disponible.')
+    if (snapshot.data().deleting) throw new Error('Esta campaña se está eliminando.')
     assertRevision(snapshot.data().revision, campaign.revision)
     tx.update(ref, { ...changes, revision: campaign.revision + 1, updatedAt: serverTimestamp() })
   })
@@ -34,12 +36,37 @@ export async function editCampaign(campaign: Campaign, changes: { notes: string 
 export async function saveSharedCharacter(campaignId: string, profileName: string, character: Character, expectedRevision: number) {
   const ref = doc(database(), 'campaigns', campaignId, 'characters', character.id)
   await runTransaction(database(), async tx => {
+    const campaign = await tx.get(doc(database(), 'campaigns', campaignId))
+    if (!campaign.exists() || campaign.data().deleting) throw new Error('Esta campaña se está eliminando o ya no está disponible.')
     const snapshot = await tx.get(ref)
     if (snapshot.exists()) assertRevision(snapshot.data().revision, expectedRevision)
     else if (expectedRevision !== 0) throw new Error('El personaje se ha eliminado desde otra sesión.')
     const saved = { ...character, owner: snapshot.exists() ? snapshot.data().owner : profileName, campaign: campaignId, revision: expectedRevision + 1 }
     if (!isSharedCharacter(saved, campaignId)) throw new Error('La ficha contiene datos inválidos.')
     tx.set(ref, { ...saved, updatedAt: serverTimestamp() })
+  })
+}
+export async function deleteSharedCampaign(campaign: Campaign) {
+  const ref = doc(database(), 'campaigns', campaign.id)
+  await deleteCampaignInStages({
+    lock: () => runTransaction(database(), async tx => {
+      const current = await tx.get(ref)
+      if (!current.exists() || current.data().deleting) return
+      assertRevision(current.data().revision, campaign.revision)
+      tx.update(ref, { deleting: true, revision: campaign.revision + 1, updatedAt: serverTimestamp() })
+    }),
+    readBatch: async () => (await getDocsFromServer(query(collection(database(), 'campaigns', campaign.id, 'characters'), limit(400)))).docs,
+    deleteBatch: async items => {
+      const batch = writeBatch(database())
+      for (const item of items) batch.delete(item.ref)
+      await batch.commit()
+    },
+    deleteParent: () => runTransaction(database(), async tx => {
+      const current = await tx.get(ref)
+      if (!current.exists()) return
+      if (!current.data().deleting) throw new Error('No se ha podido iniciar la eliminación de la campaña.')
+      tx.delete(ref)
+    }),
   })
 }
 export async function deleteSharedCharacter(campaignId: string, character: SharedCharacter) {

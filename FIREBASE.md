@@ -10,7 +10,7 @@ La aplicación utiliza Cloud Firestore del proyecto `tyranny-ae3d2`, con los ide
 
 Las reglas se han actualizado en el código local; no se publican automáticamente al compilar la web. La configuración web no concede permisos administrativos para publicarlas.
 
-Esta mesa es pública: cualquier persona puede consultar campañas y fichas, crear campañas y personajes, editar notas y fichas y eliminar personajes. Los perfiles son etiquetas y cualquiera puede elegir cualquiera de ellos. Esto también se aplica a quien acceda mediante el SDK o la API, fuera de la interfaz. Las reglas limitan las rutas accesibles a campañas y personajes, validan su estructura y revisiones y deniegan la eliminación de campañas y el acceso a otras colecciones. No proporcionan privacidad, identidad ni protección contra el borrado de personajes por visitantes.
+Esta mesa es pública: cualquier persona puede consultar, crear y eliminar campañas y personajes y editar notas y fichas. Los perfiles son etiquetas y cualquiera puede elegir cualquiera de ellos. Esto también se aplica a quien acceda mediante el SDK o la API, fuera de la interfaz. Las reglas limitan las rutas accesibles a campañas y personajes, validan su estructura y revisiones y deniegan el acceso a otras colecciones. No proporcionan privacidad, identidad ni protección contra el borrado por visitantes.
 
 Documentación oficial: [reglas de Firestore](https://firebase.google.com/docs/firestore/security/get-started), [listeners en tiempo real](https://firebase.google.com/docs/firestore/query-data/listen).
 
@@ -41,6 +41,9 @@ Ese inicio de sesión corresponde a la herramienta de administración en tu orde
 3. Los personajes se etiquetan con el perfil que los crea. Todas las fichas de la campaña se pueden consultar y editar; su perfil de origen se conserva al editar desde otro perfil.
 4. Las notas del cuaderno se comparten con todos los visitantes.
 5. Cada campaña mantiene su colección de personajes y sus notas independientes.
+6. En la lista de campañas, **Eliminar campaña** abre un diálogo que identifica la campaña y pide confirmación. Al confirmar se borran todos sus personajes, sus notas y la campaña. No hay recuperación automática.
+
+Para activar este botón debes volver a publicar la versión actual de `firestore.rules`: las reglas anteriores rechazaban la eliminación de campañas. La aplicación marca primero la campaña con `deleting: true`, lo que bloquea nuevas fichas y ediciones. Después elimina los personajes por lotes de hasta 400 y, al terminar, elimina el documento de campaña con sus notas. Si se interrumpe, aparece **Reintentar eliminación** para completar la limpieza; la campaña no puede abrirse mientras está marcada. No se modifican datos de otras campañas.
 
 El modo local del prototipo sigue disponible mediante **Consultar mis datos locales**. Conserva su almacenamiento y su control de entrada anteriores; no sube automáticamente esos datos a Firestore.
 
@@ -51,7 +54,7 @@ El modo local del prototipo sigue disponible mediante **Consultar mis datos loca
 - Los listeners reciben cambios mientras la mesa está abierta. Las transacciones verifican la revisión de notas y progresión para rechazar guardados obsoletos.
 - Ante un conflicto de notas, copia tu borrador y utiliza **Cargar versión compartida**. En progresión, cancela y vuelve a abrir la mejora para partir de la ficha actual.
 - Las transacciones necesitan conexión al servidor. Un error mantiene el formulario abierto; la barra indica si los datos proceden de caché.
-- Todavía no hay notas privadas, tablero, combate ni eliminación de campañas.
+- Todavía no hay notas privadas, tablero ni combate.
 
 ## Verificación
 
@@ -63,4 +66,4 @@ npx firebase-tools emulators:start --only firestore --project demo-drawsteel
 
 En `.env.local`, usa `VITE_FIREBASE_PROJECT_ID=demo-drawsteel`, `VITE_FIREBASE_API_KEY=demo-key`, `VITE_FIREBASE_AUTH_DOMAIN=demo-drawsteel.firebaseapp.com`, `VITE_FIREBASE_APP_ID=demo-app` y `VITE_FIREBASE_EMULATORS=true`; reinicia Vite. El emulador solo se conecta en desarrollo.
 
-Comprueba en dos sesiones sin iniciar sesión: crear y recibir campañas, crear una ficha y editarla desde otro perfil, recibir la progresión y las notas, recargar y comprobar persistencia, detectar conflictos al editar desde ambas sesiones y comprobar separación entre campañas. Verifica que las reglas rechazan fichas inválidas, revisiones incorrectas, cambios de propietario, borrado de campañas y acceso a otras colecciones. Las pruebas unitarias no sustituyen esta verificación de las reglas y sincronización con el servidor.
+Comprueba en dos sesiones sin iniciar sesión: crear y recibir campañas, crear una ficha y editarla desde otro perfil, recibir la progresión y las notas, recargar y comprobar persistencia, detectar conflictos al editar desde ambas sesiones y comprobar separación entre campañas. Para el borrado utiliza una campaña de prueba: cancelar no cambia datos; confirmar elimina sus fichas y notas y la retira de ambas sesiones. Verifica también la reanudación tras una interrupción y que no se admiten nuevas fichas ni ediciones durante la eliminación. Las reglas deben rechazar fichas inválidas, revisiones incorrectas, cambios de propietario, borrado de campañas sin marcar y acceso a otras colecciones. Las pruebas unitarias no sustituyen esta verificación de las reglas y sincronización con el servidor.

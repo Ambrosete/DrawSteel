@@ -7,6 +7,7 @@ export type Campaign = {
   ownerId: string
   notes: string
   revision: number
+  deleting?: boolean
 }
 export type SharedCharacter = Character & { revision: number }
 // Reuse the complete draft validator, replacing only the legacy identity fields.

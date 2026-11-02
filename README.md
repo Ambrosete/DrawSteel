@@ -4,7 +4,7 @@ Plataforma web de aficionados para gestionar campañas de Draw Steel con React, 
 
 ## Campañas compartidas con Firebase
 
-La mesa compartida funciona sin Firebase Authentication: se elige un perfil sin cuenta ni contraseña. Todos los visitantes pueden consultar las campañas, crear personajes, editar sus fichas y modificar el cuaderno compartido. El perfil organiza los personajes, pero no acredita identidad ni limita permisos. Firestore distribuye las ediciones en tiempo real y las transacciones detectan conflictos de edición.
+La mesa compartida funciona sin Firebase Authentication: se elige un perfil sin cuenta ni contraseña. Todos los visitantes pueden consultar las campañas, crear personajes, editar sus fichas y modificar el cuaderno compartido. La lista incluye **Eliminar campaña**, con confirmación y borrado de sus fichas y notas; requiere publicar la versión actual de `firestore.rules`. El perfil organiza los personajes, pero no acredita identidad ni limita permisos. Firestore distribuye las ediciones en tiempo real y las transacciones detectan conflictos de edición.
 
 El proyecto configurado por defecto es `tyranny-ae3d2`. Para activar los servicios sigue [FIREBASE.md](FIREBASE.md): crea Firestore y publica `firestore.rules`. No se necesita activar Authentication ni autorizar dominios de acceso. Las variables de `.env.example` son opcionales y permiten seleccionar otro entorno (también en GitHub Actions para Pages). El modo local sigue disponible desde la entrada.
 
