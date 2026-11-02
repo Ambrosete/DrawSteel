@@ -36,3 +36,17 @@ test('las líneas partidas se redistribuyen y las citas multilínea no se mezcla
   assert.deepEqual(blocks[0], { kind: 'quote', text: '“A long quote continued here.”' })
   assert.deepEqual(blocks.at(-1), { kind: 'text', text: 'Effect: This sentence is wrapped in the source.' })
 })
+
+test('se destacan todas las palabras clave de la línea y también las habilidades de una sola palabra clave', () => {
+  const blocks = formatAbilityText('A description.\nArea, Magic, Melee, Weapon\nMain action\nDistance: Melee 1\nx One creature\nEffect: Ranged attacks can follow.')
+  assert.deepEqual(blocks.find(b => b.kind === 'keywords'), { kind: 'keywords', text: 'Area, Magic, Melee, Weapon' })
+  assert.deepEqual(formatAbilityText('A description.\nPsionic\nManeuver\nDistance: Self\nx Self').find(b => b.kind === 'keywords'), { kind: 'keywords', text: 'Psionic' })
+  assert.ok(blocks.some(b => b.kind === 'text' && b.text.startsWith('Effect: Ranged')))
+})
+
+test('Distance aparece una vez en cada habilidad y conserva sus continuaciones sin incluir los objetivos', () => {
+  for (const ability of abilities) assert.equal(formatAbilityText(ability.details).filter(b => b.kind === 'distance').length, 1, ability.name)
+  const blocks = formatAbilityText('A description.\nMagic, Ranged\nMain action\nDistance: Melee 1 or\nranged 10\nx One enemy\nEffect: Move.')
+  assert.deepEqual(blocks.find(b => b.kind === 'distance'), { kind: 'distance', text: 'Distance: Melee 1 or ranged 10' })
+  assert.ok(blocks.some(b => b.kind === 'text' && b.text === 'x One enemy'))
+})

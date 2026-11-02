@@ -9,7 +9,11 @@ function AbilityText({ details }: { details: string }) {
     ? <span className="ability-roll" role="group" aria-label={block.title} key={index}><span className="ability-roll-title">{block.title}</span>{block.tiers.map((result, tierIndex) => <span className="ability-roll-result" key={tierIndex}><strong className="ability-roll-label">{result.label}</strong><span>{result.text}</span></span>)}</span>
     : block.kind === 'quote'
       ? <span className="ability-flavor" key={index}><em>{block.text}</em></span>
-      : <span className="ability-paragraph" key={index}>{block.text}</span>)}</span>
+      : block.kind === 'keywords'
+        ? <strong className="ability-keywords" key={index}>{block.text}</strong>
+        : block.kind === 'distance'
+          ? <span className="ability-distance" key={index}><strong>Distance:</strong><span>{block.text.replace(/^Distance\s*:\s*/i, '')}</span></span>
+          : <span className="ability-paragraph" key={index}>{block.text}</span>)}</span>
 }
 
 function AbilityCardContent({ ability }: { ability: Ability }) {
