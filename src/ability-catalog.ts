@@ -3158,7 +3158,7 @@ export const abilities: readonly Ability[] = [
     "cost": 3,
     "resource": "Insight",
     "bookPage": 163,
-    "details": "Your attack leaves them reeling, allowing you to follow up.\nMelee, Strike, Weapon\nMain action\nDistance:  Melee 1\nx  One creature\nPower Roll + Agility:\n≤11:    4 +  A  damage; slide 2\n@    6 +  A  damage; slide 3\n17+:    10 +  A  damage; slide 5\nEffect:  You can shift into any square the target leaves when you slide\nthem."
+    "details": "Your attack leaves them reeling, allowing you to follow up.\nMelee, Strike, Weapon\nMain action\nDistance:  Melee 1\nx  One creature\nPower Roll + Agility:\n≤11:    4 +  A  damage; slide 2\n12–16:    6 +  A  damage; slide 3\n17+:    10 +  A  damage; slide 5\nEffect:  You can shift into any square the target leaves when you slide\nthem."
   },
   {
     "id": "Shadow:164:Eviscerate",
@@ -3600,7 +3600,7 @@ export const abilities: readonly Ability[] = [
     "cost": 11,
     "resource": "Insight",
     "bookPage": 172,
-    "details": "One explosion, an offense. Three explosions, an assault. Nine explosions, a\ncelebration.\nRanged\nMain action\nDistance:  Ranged 10\nx  One creature or object\nEffect:  Each enemy within 3 squares of the target who is not cur-\nrently targeted by this ability also becomes targeted by this ability.\nThis effect continues until there are no more available targets. The\nability deals acid, fire, or poison damage (your choice).\nPower Roll + Agility:\nÁ    7 damage\nÉ\n10 damage\n17+:    15 damage"
+    "details": "One explosion, an offense. Three explosions, an assault. Nine explosions, a\ncelebration.\nRanged\nMain action\nDistance:  Ranged 10\nx  One creature or object\nEffect:  Each enemy within 3 squares of the target who is not cur-\nrently targeted by this ability also becomes targeted by this ability.\nThis effect continues until there are no more available targets. The\nability deals acid, fire, or poison damage (your choice).\nPower Roll + Agility:\n≤11:    7 damage\n12–16:    10 damage\n17+:    15 damage"
   },
   {
     "id": "Shadow:172:To the Stars",
@@ -4185,7 +4185,7 @@ export const abilities: readonly Ability[] = [
     "cost": 0,
     "resource": "",
     "bookPage": 190,
-    "details": "You lift and hurl your foe away from you.\nPsionic, Ranged, Telekinesis\nMain action\nDistance:  Ranged 10\nx  One creature or object\nPower Roll + Reason:\n≤11:    Slide 2 +  R\nÉ    Slide 4 +  R\n17+:    Slide 6 +  R ; prone\nStrained:  You must vertical push the target instead of sliding them.\nDraw Steel"
+    "details": "You lift and hurl your foe away from you.\nPsionic, Ranged, Telekinesis\nMain action\nDistance:  Ranged 10\nx  One creature or object\nPower Roll + Reason:\n≤11:    Slide 2 +  R\n12–16:    Slide 4 +  R\n17+:    Slide 6 +  R ; prone\nStrained:  You must vertical push the target instead of sliding them.\nDraw Steel"
   },
   {
     "id": "Talent:190:Kinetic Pulse",
