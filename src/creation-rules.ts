@@ -1,4 +1,4 @@
-import { classes, kits } from './rules-catalog.ts'
+import { classes, kits, stormKits } from './rules-catalog.ts'
 import type { Characteristic } from './characters.ts'
 import { characteristicNames } from './characters.ts'
 export type Scores = Record<Characteristic, number>
@@ -23,10 +23,11 @@ export function characteristicChoices(className: string): Scores[] {
 export function hasValidScores(className: string, scores: Scores): boolean {
   return characteristicChoices(className).some(option => characteristicNames.every(key => scores[key] === option[key]))
 }
-export function hasValidKits(className: string, first: string, second = ''): boolean {
+export function hasValidKits(className: string, first: string, second = '', subclass = ''): boolean {
   const heroClass = classes.find(c => c.name === className)
   if (!heroClass) return false
   if (heroClass.kitCount === 0) return first === 'Sin kit' && !second
+  if (className === 'Fury' && subclass === 'Stormwight') return stormKits.some(kit => kit.name === first) && !second
   if (!kits.some(kit => kit.name === first)) return false
   return heroClass.kitCount === 1 ? !second : first !== second && kits.some(kit => kit.name === second)
 }

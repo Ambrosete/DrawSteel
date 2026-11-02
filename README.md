@@ -26,11 +26,23 @@ Los personajes antiguos y de ejemplo se eliminan de la colección `drawsteel.cha
 
 El creador utiliza el catálogo de **Draw Steel Heroes v1.01b**, extraído del PDF comprimido aportado por el usuario: 12 ascendencias, 18 carreras, 9 clases, 21 kits y 100 complicaciones. Los nombres permanecen en inglés y cada selección muestra la página impresa y su posición en el PDF completo. El archivo recortado contiene 263 páginas: corresponde a las páginas 21–283 del PDF completo, numeradas 6–268 en el libro. El catálogo está en `src/rules-catalog.ts`; el PDF no se distribuye con la aplicación.
 
-El fondo combina carrera y cultura: se eligen entorno, organización, crianza e idioma cultural (además de Caelian). Las características de nivel 1 se eligen entre las permutaciones válidas para la clase, respetando sus valores fijos de 2 y los conjuntos del apartado Basics. Censor, Fury, Shadow y Troubadour tienen un kit; Tactician elige dos; Conduit, Elementalist, Null y Talent no utilizan kit inicialmente. Las bonificaciones de dos kits no se suman automáticamente. La complicación es opcional.
+El fondo combina carrera y cultura: se eligen entorno, organización, crianza e idioma cultural (además de Caelian). Las características de nivel 1 se eligen entre las permutaciones válidas para la clase, respetando sus valores fijos de 2 y los conjuntos del apartado Basics. Censor, Fury (con kit especial en Stormwight), Shadow y Troubadour tienen un kit; Tactician elige dos; Conduit, Elementalist, Null y Talent no utilizan kit inicialmente. Las bonificaciones de dos kits no se suman automáticamente. La complicación es opcional.
 
-Los personajes siguen siendo **borradores**: faltan subclases, compra de rasgos de ascendencia, habilidades, habilidades de clase, ventajas y efectos mecánicos de las complicaciones. El catálogo y las validaciones anteriores no equivalen a una ficha completamente automatizada. Los borradores propios guardados anteriormente se mantienen y se pueden consultar, aunque sus opciones no procedan del catálogo.
+## Habilidades, progresión y eliminación
 
-`npm test` comprueba la recuperación de personajes, perfiles, integridad del catálogo, distribuciones de las nueve clases y restricciones de kits. Campañas compartidas, progresión, tablero y combate siguen pendientes.
+El catálogo incluye 427 habilidades de elección transcritas del manual: habilidades distintivas, heroicas, de subclase y 25 habilidades de kit (21 kits generales y 4 de Stormwight). El selector muestra costes, acciones, alcance, objetivos, tiradas, efectos y páginas del libro en inglés. Los símbolos de los tres resultados se muestran como ≤11, 12–16 y ≥17.
+
+Al crear un personaje se elige su subclase (dos dominios diferentes en Conduit), las habilidades distintivas que le correspondan y una habilidad de coste 3 y otra de coste 5. Tactician obtiene sus habilidades distintivas de sus dos kits. Fury/Stormwight utiliza Boren, Corven, Raden o Vuken.
+
+La ficha permite avanzar de uno en uno hasta nivel 10, previa confirmación del hito o experiencia con el Director. Se añaden elecciones en los niveles 2, 3, 5, 6, 8 y 9: Elementalist obtiene elecciones heroicas adicionales donde otras clases obtienen habilidades de subclase. Las elecciones anteriores se conservan; las nuevas excluyen duplicados y opciones de otras clases, subclases o niveles. Los aumentos de características de los niveles 4, 7 y 10 se aplican al confirmar; las clases con una única característica principal requieren elegir la mejora adicional en 4 y 10. El nivel y las habilidades se conservan al recargar.
+
+Los borradores antiguos se mantienen. Su botón **Completar habilidades** añade elecciones de nivel 1 sin borrar datos ni subir de nivel. Los borradores con una clase propia ajena al catálogo se pueden consultar y eliminar, pero no tienen progresión automática.
+
+Hay botones **Eliminar personaje** en cada tarjeta y en la ficha. Un diálogo nativo permite cancelar (también con Escape) o confirmar el borrado permanente del personaje del perfil actual. Al borrar el personaje seleccionado se vuelve a la lista; los personajes de otros perfiles se conservan.
+
+Las fichas siguen siendo borradores: no se automatizan el gasto de recursos, el combate, la compra de rasgos de ascendencia, ventajas/perks, habilidades de pruebas/skills, rasgos pasivos de cada nivel ni efectos de las complicaciones. La selección detallada de habilidades de combate no equivale a una ficha completamente automatizada. El Director revisa estas otras mejoras con el manual. Los nombres de habilidades propias guardados antes del catálogo se conservan.
+
+`npm test` comprueba datos, perfiles, catálogo, distribuciones de características, las elecciones de todas las subclases en niveles 1–10, compatibilidad de borradores y borrado por propietario. El workflow de Pages ejecuta las pruebas antes de compilar. Campañas compartidas, tablero y combate siguen pendientes.
 
 ## GitHub Pages
 

@@ -862,3 +862,5 @@ export const environments = ['Nomadic', 'Rural', 'Secluded', 'Urban', 'Wildernes
 export const organizations = ['Bureaucratic', 'Communal'] as const
 export const upbringings = ['Academic', 'Creative', 'Labor', 'Lawless', 'Martial', 'Noble'] as const
 export const cultureLanguages = ['Anjali', 'Axiomatic', 'Caelian', 'Filliaric', 'The First Language', 'Hyrallic', 'Illyvric', 'Kalliak', 'Kethaic', 'Khelt', 'Khoursirian', 'High Kuric', 'Low Kuric', 'Mindspeech', 'Proto-Ctholl', 'Szetch', 'Tholl', 'Urollialic', 'Variac', 'Vastariax', 'Vhoric', 'Voll', 'Yllyric', 'Za’hariax', 'Zaliac', 'Uvalic', 'Higaran', 'Oaxuatl', 'Khemharic', 'Phaedran', 'Riojan', 'Vaniric', 'Vaslorian', 'Ananjali', 'High Rhyvian', 'Khamish', 'Kheltivari', 'Low Rhyvian', 'Old Variac'] as const
+
+export const stormKits = [{ name: 'Boren', bookPage: 144, sourcePage: 159 }, { name: 'Corven', bookPage: 144, sourcePage: 159 }, { name: 'Raden', bookPage: 145, sourcePage: 160 }, { name: 'Vuken', bookPage: 145, sourcePage: 160 }] as const

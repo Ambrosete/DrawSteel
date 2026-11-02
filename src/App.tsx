@@ -1,3 +1,7 @@
+import CharacterProgression from './CharacterProgression'
+import DeleteCharacterDialog from './DeleteCharacterDialog'
+import { AbilityDetails } from './AbilityPicker'
+import { chosenAbilities, removeOwnedCharacter, subclassOptions } from './progression'
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import CharacterCreator from './CharacterCreator'
@@ -25,6 +29,8 @@ export default function App() {
   const [characters, setCharacters] = useState<Character[]>(loadCharacters)
   const [query, setQuery] = useState('')
   const [creating, setCreating] = useState(false)
+  const [trainingTarget, setTrainingTarget] = useState<number | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Character | null>(null)
   const [storageError, setStorageError] = useState(false)
   useEffect(() => { const update = () => setPage(currentPage()); window.addEventListener('hashchange', update); return () => window.removeEventListener('hashchange', update) }, [])
   useEffect(() => {
@@ -43,9 +49,19 @@ export default function App() {
     if (!canEnter(loginChoice, password)) { setLoginError('La contraseña de Gabriel no es correcta.'); return }
     setProfile(loginChoice); setPassword(''); setLoginError(''); setCampaign(null); setSelectedId(null); setCreating(false); setQuery('')
   }
-  function logout() { setProfile(null); setCampaign(null); setSelectedId(null); setPassword(''); setLoginError(''); setCreating(false); setQuery('') }
-  function chooseCharacter(character: Character) { setSelectedId(character.id); setCreating(false); setPage('inicio'); location.hash = 'inicio' }
+  function logout() { setTrainingTarget(null); setDeleteTarget(null); setProfile(null); setCampaign(null); setSelectedId(null); setPassword(''); setLoginError(''); setCreating(false); setQuery('') }
+  function chooseCharacter(character: Character) { setTrainingTarget(null); setSelectedId(character.id); setCreating(false); setPage('inicio'); location.hash = 'inicio' }
   function saveCharacter(character: Character) { setCharacters(previous => [...previous, character]); setQuery(''); chooseCharacter(character) }
+  function updateCharacter(updated: Character) {
+    setCharacters(previous => previous.map(c => c.id === updated.id && c.owner === profile && c.campaign === 'Tyranny' ? updated : c))
+    setTrainingTarget(null)
+  }
+  function deleteCharacter() {
+    if (!deleteTarget || !profile) return
+    setCharacters(previous => removeOwnedCharacter(previous, deleteTarget.id, profile))
+    if (selectedId === deleteTarget.id) { setSelectedId(null); setTrainingTarget(null); setPage('personajes'); location.hash = 'personajes' }
+    setDeleteTarget(null)
+  }
   const storageNotice = storageError && <p role="status" className="notice">No se pueden guardar los cambios en este navegador. Se conservarán solo durante esta sesión.</p>
 
   if (!profile) return <div className="entry-shell"><main className="entry-panel"><div className="eyebrow">DRAWSTEEL · TU MESA DE AVENTURAS</div><h1>¿Quién entra<br />a la aventura?</h1><p className="intro">Elige tu perfil para continuar.</p><form onSubmit={login} className="login-form"><label>Perfil<select name="profile" value={loginChoice} onChange={e => { setLoginChoice(e.target.value as Profile); setPassword(''); setLoginError('') }}>{profiles.map(name => <option key={name}>{name}</option>)}</select></label>{loginChoice === 'Gabriel' && <label>Contraseña<input name="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required autoComplete="current-password" /></label>}{loginError && <p role="alert" className="error">{loginError}</p>}<button type="submit">Entrar ↗</button></form><p className="local-note">Acceso local de prototipo. Los perfiles y la contraseña no protegen los datos frente a otros usuarios de este navegador. Los demás perfiles no requieren contraseña.</p>{storageNotice}</main></div>
@@ -65,14 +81,21 @@ export default function App() {
       {creating ? <CharacterCreator profile={profile} onSave={saveCharacter} onCancel={() => setCreating(false)} /> : <>
         <label className="search-label">Buscar personajes<input type="search" placeholder="Nombre, clase o ascendencia…" value={query} onChange={e => setQuery(e.target.value)} /></label>
         <div className="section-heading"><h2>Tus personajes</h2><span>{filtered.length} personajes</span></div>
-        <div className="character-grid">{filtered.map((c, i) => <article className="character-card" key={c.id}><div className={`portrait portrait-${i % 3}`} aria-hidden="true">{c.name.split(' ').slice(0, 2).map(w => w[0]).join('')}<span>✦</span></div><div className="character-body"><span className="level">BORRADOR · TYRANNY</span><h3>{c.name}</h3><p>{c.ancestry} · {c.heroClass}</p><div className="campaign-label">{c.background} · {c.kit}</div><button onClick={() => chooseCharacter(c)}>Elegir personaje ↗</button></div></article>)}</div>
+        <div className="character-grid">{filtered.map((c, i) => <article className="character-card" key={c.id}><div className={`portrait portrait-${i % 3}`} aria-hidden="true">{c.name.split(' ').slice(0, 2).map(w => w[0]).join('')}<span>✦</span></div><div className="character-body"><span className="level">NIVEL {c.level ?? 1} · TYRANNY</span><h3>{c.name}</h3><p>{c.ancestry} · {c.heroClass}</p><div className="campaign-label">{c.background} · {c.kit}</div><button onClick={() => chooseCharacter(c)}>Elegir personaje ↗</button><button className="danger" aria-label={`Eliminar a ${c.name}`} onClick={() => setDeleteTarget(c)}>Eliminar personaje</button></div></article>)}</div>
         {filtered.length === 0 && <div className="empty-state"><h2>{mine.length ? 'No hay coincidencias' : 'Tu historia empieza en blanco'}</h2><p>{mine.length ? 'Prueba otra búsqueda.' : 'No hay personajes en este perfil. Crea el primero para entrar a Tyranny.'}</p>{!mine.length && <button onClick={() => setCreating(true)}>Crear mi personaje</button>}</div>}
       </>}
     </> : page === 'inicio' ? <>
-      <div className="eyebrow">TYRANNY · {profile.toLocaleUpperCase('es')}</div><h1>Tu aventura,<br /><em>{selected.name}.</em></h1><p className="intro">Tu personaje está listo como borrador. Quedan por completar rasgos, habilidades y otras elecciones con el Director.</p>
-      <article className="character-sheet"><div className="section-heading"><h2>{selected.name}</h2><a href="#personajes" className="button">Cambiar personaje</a></div><dl className="detail-grid">{[['Raza / ascendencia', selected.ancestry], ['Fondo', selected.background], ['Clase', selected.heroClass], ['Kit', [selected.kit, selected.secondKit].filter(Boolean).join(' + ')], ['Complicación', selected.complication || 'Sin complicación'], ['Campaña', selected.campaign], ...(selected.culture ? [['Entorno', selected.culture.environment], ['Organización', selected.culture.organization], ['Crianza', selected.culture.upbringing], ['Idioma cultural', selected.culture.language]] : [])].map(([key, value]) => <div key={key}><dt>{key}</dt><dd>{value}</dd></div>)}</dl><div className="scores">{characteristicNames.map(key => <div className="score" key={key}><span>{key}</span><strong>{selected.characteristics[key]}</strong></div>)}</div></article>
+      <div className="eyebrow">TYRANNY · {profile.toLocaleUpperCase('es')}</div><h1>Tu aventura,<br /><em>{selected.name}.</em></h1><p className="intro">Tu personaje está listo como borrador. Elige sus habilidades y revisa con el Director los rasgos y las demás mejoras de clase.</p>
+      <article className="character-sheet"><div className="section-heading"><h2>{selected.name} · Nivel {selected.level ?? 1}</h2><div className="sheet-actions"><a href="#personajes" className="button">Cambiar personaje</a><button className="danger" onClick={() => setDeleteTarget(selected)}>Eliminar personaje</button></div></div><dl className="detail-grid">{[['Raza / ascendencia', selected.ancestry], ['Fondo', selected.background], ['Clase', selected.heroClass], ['Subclase / dominios', selected.training?.subclasses.join(' / ') || 'Pendiente'], ['Kit', [selected.kit, selected.secondKit].filter(Boolean).join(' + ')], ['Complicación', selected.complication || 'Sin complicación'], ['Campaña', selected.campaign], ...(selected.culture ? [['Entorno', selected.culture.environment], ['Organización', selected.culture.organization], ['Crianza', selected.culture.upbringing], ['Idioma cultural', selected.culture.language]] : [])].map(([key, value]) => <div key={key}><dt>{key}</dt><dd>{value}</dd></div>)}</dl><div className="scores">{characteristicNames.map(key => <div className="score" key={key}><span>{key}</span><strong>{selected.characteristics[key]}</strong></div>)}</div></article>
+      {trainingTarget !== null ? <CharacterProgression key={`${selected.id}-${trainingTarget}`} character={selected} targetLevel={trainingTarget} onSave={updateCharacter} onCancel={() => setTrainingTarget(null)} /> : <section className="character-sheet ability-section"><div className="section-heading"><h2>Habilidades de combate</h2>{subclassOptions[selected.heroClass] && ((selected.level ?? 1) < 10 || !selected.training) && <button onClick={() => setTrainingTarget(selected.training ? (selected.level ?? 1) + 1 : selected.level ?? 1)}>{selected.training ? `Subir a nivel ${(selected.level ?? 1) + 1}` : 'Completar habilidades'}</button>}</div>
+        {!selected.training && <p className="notice">Este borrador todavía no tiene habilidades de clase elegidas. Complétalas para poder subir de nivel.</p>}
+        {!subclassOptions[selected.heroClass] && <p className="notice">La clase de este borrador es una opción propia. Para usar la progresión del manual, crea un personaje con una de sus nueve clases.</p>}
+        {(selected.level ?? 1) === 10 && <p className="notice">Nivel máximo del manual: 10.</p>}
+        {chosenAbilities(selected).map(ability => <AbilityDetails key={ability.id} ability={ability} />)}
+      </section>}
       <div className="section-heading"><h2>Tu mesa de juego</h2></div><div className="feature-grid">{navigation.slice(1).map(n => <a className="feature-card" href={`#${n.id}`} key={n.id}><span className="feature-icon">{n.icon}</span><h3>{n.label}<span>↗</span></h3><small>{n.id === 'personajes' ? `${mine.length} personajes` : n.id === 'campanas' ? 'Tyranny' : 'Próximamente'}</small></a>)}</div>
     </> : page === 'campanas' ? <><div className="eyebrow">TU CAMPAÑA</div><h1>Tyranny</h1><p className="intro">Has entrado como {profile} con {selected.name}.</p><p className="notice">Tyranny es la única campaña disponible. Las sesiones y la gestión compartida se incorporarán más adelante.</p><button onClick={() => { setCampaign(null); setSelectedId(null) }}>Volver a elegir campaña</button></> : <><div className="eyebrow">CONSTRUYENDO LA AVENTURA</div><h1>{page === 'combate' ? 'Combate' : 'Reglas'}</h1><div className="placeholder"><h2>{page === 'combate' ? 'Prepara tu próximo encuentro.' : 'El manual, junto a tu mesa.'}</h2><p>{page === 'combate' ? 'El tablero, las tiradas y los combates supervisados por el Director se incorporarán en próximas versiones.' : 'El creador incorpora 12 ascendencias, 18 carreras, 9 clases, 21 kits y 100 complicaciones de Draw Steel Heroes v1.01b, con referencias de página. Valida características iniciales y acceso a kits. Los efectos de rasgos, habilidades y complicaciones se consultan con el Director.'}</p><a className="button" href="#inicio">Volver a mi personaje</a></div></>}
+    {deleteTarget && <DeleteCharacterDialog name={deleteTarget.name} onCancel={() => setDeleteTarget(null)} onDelete={deleteCharacter} />}
     <footer>DRAWSTEEL <span>Tyranny · {profile}</span><small>Prototipo local · Datos en este navegador</small></footer>
   </div></main></div>
 }
