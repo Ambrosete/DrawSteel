@@ -17,3 +17,19 @@ textarea:focus-visible{outline:2px solid var(--table-accent);outline-offset:4px}
 @media(max-width:700px){.shared-journal{margin:20px 16px;padding:20px}.campaign-lobby .section-heading{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 .campaign-entry{margin:24px 0 30px}.campaign-entry .campaign-choice{margin:0 0 10px}.campaign-entry>.danger{font-size:12px;min-height:44px}.campaign-entry .campaign-choice:disabled{cursor:not-allowed}
+.ability-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:18px;align-items:start;margin-top:18px}
+.ability-card,.creator label.ability-choice{background:#250d17;border:1px solid #a56c7b;border-radius:10px;color:#f3e9e5;min-width:0;padding:0;overflow:hidden;text-align:left}
+.ability-card-content{display:block;padding:20px}.ability-card-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-bottom:1px solid #744351;padding-bottom:14px;margin-bottom:12px}
+.ability-card-name{font:600 23px/1.2 Georgia,serif;overflow-wrap:anywhere}.ability-card-cost{font-size:12px;line-height:1.5;color:#efd49d;flex-shrink:0;max-width:40%;text-align:right}
+.ability-card-meta{display:block;font-size:11px;line-height:1.6;color:#dabd9a;margin-bottom:16px}
+.ability-card-text{display:block;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.75;color:#f0dce3}
+.creator label.ability-choice{display:flex;flex-direction:column;cursor:pointer;transition:border-color 150ms ease-out,box-shadow 150ms ease-out}
+.creator label.ability-choice:hover{border-color:#edcf95}.creator label.ability-choice:focus-within{outline:3px solid #edcf95;outline-offset:3px}
+.creator label.ability-choice.is-selected{border:2px solid #edcf95;box-shadow:0 0 0 2px #d7b77b30}
+.ability-card-selection{display:flex;align-items:center;gap:10px;min-height:44px;padding:12px 18px;background:#421c29;border-bottom:1px solid #744351;font-size:12px;color:#efdbba}
+.ability-card-selection input[type=radio]{width:18px;height:18px;margin:0;padding:0;flex-shrink:0;accent-color:#d7b77b;cursor:pointer}
+.creator label.ability-choice.is-unavailable{opacity:.7;cursor:not-allowed}.ability-slot-fixed .ability-card{max-width:520px}
+.ability-selection-status{font-size:13px;line-height:1.6;color:#efd49d;margin:8px 0}.ability-slot-cards{background:#35131f}
+.transfer-dialog label{display:block;font-size:14px;margin-bottom:24px}.transfer-dialog .dialog-actions{margin-top:24px}
+@media(max-width:700px){.ability-card-grid{grid-template-columns:1fr}.ability-card-content{padding:16px}.ability-card-name{font-size:21px}}
+@media(prefers-reduced-motion:reduce){.creator label.ability-choice{transition:none}}

@@ -8,6 +8,12 @@ La mesa compartida funciona sin Firebase Authentication: se elige un perfil sin 
 
 El proyecto configurado por defecto es `tyranny-ae3d2`. Para activar los servicios sigue [FIREBASE.md](FIREBASE.md): crea Firestore y publica `firestore.rules`. No se necesita activar Authentication ni autorizar dominios de acceso. Las variables de `.env.example` son opcionales y permiten seleccionar otro entorno (también en GitHub Actions para Pages). El modo local sigue disponible desde la entrada.
 
+En las tarjetas de personajes y en la ficha, **Transferir personaje** permite elegir otra campaña. El movimiento conserva el identificador, el perfil, el nivel, la progresión y el resto de la ficha; una transacción crea la ficha en destino y la retira del origen sin sobrescribir personajes existentes. No se permiten transferencias a campañas eliminándose. Esta opción utiliza las reglas actuales y no requiere otra modificación de permisos.
+
+Las habilidades se muestran en cartas con todo su texto visible. Al crear o subir de nivel, cada elección presenta todas sus opciones en una cuadrícula: pulsa una carta o utiliza sus controles de selección con el teclado. Las elecciones anteriores permanecen visibles y bloqueadas; las habilidades repetidas no pueden elegirse en otra posición. Las nuevas elecciones se guardan al confirmar.
+
+El navegador recuerda el perfil, la campaña y el personaje seleccionados. F5 recupera esa selección y mantiene la sección indicada por la URL. La última ficha recibida se muestra inmediatamente mientras Firebase reconecta, con las acciones de edición deshabilitadas hasta confirmar los datos actuales. Salir o cambiar de perfil limpia la selección compartida. Si el servidor confirma que una campaña o personaje ha desaparecido, se vuelve a la lista disponible. La selección local se conserva por separado; no se guardan contraseñas ni formularios sin confirmar.
+
 ## Desarrollo
 
 Requiere Node.js 24 y npm 11.
@@ -24,7 +30,7 @@ npm run dev
 
 ## Entrada y personajes en modo local
 
-El modo local mantiene el flujo **perfil → campaña Tyranny → elegir o crear personaje → mesa de juego**. Se ofrecen Gabriel, David, Mateo, Adrián, Andrés y Quique. Gabriel tiene la contraseña local del prototipo; los demás perfiles entran sin contraseña. Se vuelve a elegir perfil al recargar. En modo compartido todos los perfiles entran sin contraseña y utilizan las campañas de Firestore.
+El modo local mantiene el flujo **perfil → campaña Tyranny → elegir o crear personaje → mesa de juego**. Se ofrecen Gabriel, David, Mateo, Adrián, Andrés y Quique. Gabriel tiene la contraseña local del prototipo; los demás perfiles entran sin contraseña. El navegador recuerda el perfil y la selección al recargar. En modo compartido todos los perfiles entran sin contraseña y utilizan las campañas de Firestore.
 
 El control de entrada local se ejecuta en el navegador: no constituye autenticación segura. La contraseña está en el código cliente. Los perfiles separan las listas en la interfaz, pero cualquier usuario con acceso al navegador puede leer o modificar el almacenamiento. Este modo no sincroniza datos. La mesa compartida tampoco autentica a los visitantes; sus reglas permiten acceso público a las campañas y personajes, con validación de datos.
 
