@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import App from './App'
+import DeleteCampaignDialog from './DeleteCampaignDialog'
 import { firebaseConfigured } from './firebase'
 import { profiles } from './characters'
-import { createCampaign, editCampaign, watchCampaigns, watchCharacters, saveSharedCharacter, deleteSharedCharacter } from './cloud-store'
+import { createCampaign, editCampaign, watchCampaigns, watchCharacters, saveSharedCharacter, deleteSharedCharacter, deleteSharedCampaign } from './cloud-store'
 import type { Campaign, SharedCharacter } from './cloud-model'
 import type { Character, Profile } from './characters'
 
@@ -35,10 +36,13 @@ export default function CloudApp() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [name, setName] = useState('')
-  const active = campaigns.find(c => c.id === activeId)
+  const [deleteTarget, setDeleteTarget] = useState<Campaign | null>(null)
+  const [deleteBusy, setDeleteBusy] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+  const active = campaigns.find(c => c.id === activeId && !c.deleting)
   useEffect(() => {
     if (!firebaseConfigured || !profileName || local) return
-    return watchCampaigns((data, fromCache) => { setCampaigns(data); setCampaignsCached(fromCache); setError('') }, e => { setCampaigns([]); setActiveId(null); setError(errorText(e)) })
+    return watchCampaigns((data, fromCache) => { setCampaigns(data); setCampaignsCached(fromCache); setError(''); setActiveId(previous => data.some(c => c.id === previous && !c.deleting) ? previous : null) }, e => { setCampaigns([]); setActiveId(null); setError(errorText(e)) })
   }, [profileName, local])
   useEffect(() => {
     setCharacters([]); setReadyId(null); setCached(true)
@@ -51,6 +55,16 @@ export default function CloudApp() {
     try { await work() } catch (e) { setError(errorText(e)) } finally { setBusy(false) }
   }
   function changeProfile() { setProfileName(null); setActiveId(null); setCampaigns([]); setCharacters([]); setCampaignsCached(true); setError('') }
+  async function confirmDelete() {
+    if (!deleteTarget || deleteBusy) return
+    setDeleteBusy(true); setDeleteError('')
+    try { await deleteSharedCampaign(deleteTarget); setDeleteTarget(null) }
+    catch (e) {
+      setDeleteError((e as { code?: string })?.code === 'permission-denied'
+        ? 'Para borrar campañas, publica la nueva versión de firestore.rules en Firebase → Firestore Database → Reglas. No se puede completar la eliminación con las reglas anteriores.'
+        : `${errorText(e)} Si la eliminación había comenzado, puedes volver a intentarlo para completarla.`)
+    } finally { setDeleteBusy(false) }
+  }
   const notice = <>{error && <p className="notice error" role="alert">{error}</p>}</>
   if (local) return <><div className="cloud-banner"><span>Modo local · Sin sincronización</span><button className="secondary" onClick={() => setLocal(false)}>Volver a la mesa compartida</button></div><App /></>
   if (!firebaseConfigured) return <div className="entry-shell"><main className="entry-panel"><h1>Tu mesa, siempre reunida.</h1><p className="intro">La conexión compartida todavía no está activada. Sigue la guía FIREBASE.md del proyecto para conectar tu mesa.</p><button onClick={() => setLocal(true)}>Abrir modo local</button></main></div>
@@ -64,7 +78,7 @@ export default function CloudApp() {
     }
     return <><div className="cloud-banner" role="status">{cached || campaignsCached ? 'Consultando datos guardados · Esperando conexión' : 'Mesa abierta · Cambios compartidos en tiempo real'}</div><App key={`${active.id}-${profileName}`} cloud={session} /><CampaignJournal key={`journal-${active.id}`} campaign={active} /></>
   }
-  return <div className="entry-shell"><main className="entry-panel campaign-lobby"><div className="section-heading"><span>{profileName}</span><button className="secondary" disabled={busy} onClick={changeProfile}>Cambiar perfil</button></div><h1>Campañas de la mesa.</h1><p className="intro">Elige una historia o crea una campaña para tu grupo.</p>{notice}{activeId && <p role="status">Cargando la mesa…</p>}{campaignsCached && !error && <p role="status" className="local-note">Esperando confirmación del servidor…</p>}<div>{campaigns.map(c => <button className="campaign-choice" key={c.id} onClick={() => { setError(''); setActiveId(c.id) }}><span aria-hidden="true">⚑</span><span><strong>{c.name}</strong><small>Entrar a la campaña</small></span></button>)}</div><form className="login-form" onSubmit={e => { e.preventDefault(); void action(async () => { await createCampaign(profileName, name); setName('') }) }}><label>Nombre de la nueva campaña<input required maxLength={80} value={name} onChange={e => setName(e.target.value)} /></label><button disabled={busy}>{busy ? 'Guardando…' : 'Crear campaña'}</button></form><p className="local-note">Todos los perfiles comparten estas campañas. El perfil organiza las fichas; no limita el acceso.</p><button className="secondary" disabled={busy} onClick={() => setLocal(true)}>Consultar mis datos locales</button></main></div>
+  return <div className="entry-shell"><main className="entry-panel campaign-lobby"><div className="section-heading"><span>{profileName}</span><button className="secondary" disabled={busy} onClick={changeProfile}>Cambiar perfil</button></div><h1>Campañas de la mesa.</h1><p className="intro">Elige una historia o crea una campaña para tu grupo.</p>{notice}{activeId && <p role="status">Cargando la mesa…</p>}{campaignsCached && !error && <p role="status" className="local-note">Esperando confirmación del servidor…</p>}<div>{campaigns.map(c => <article className="campaign-entry" key={c.id}><button className="campaign-choice" disabled={busy || !!c.deleting} onClick={() => { setError(''); setActiveId(c.id) }}><span aria-hidden="true">⚑</span><span><strong>{c.name}</strong><small>{c.deleting ? 'Eliminación pendiente · Pulsa Reintentar eliminación' : 'Entrar a la campaña'}</small></span></button><button className="danger" disabled={busy} aria-label={`${c.deleting ? 'Reintentar eliminación de' : 'Eliminar campaña'} ${c.name}`} onClick={() => { setDeleteError(''); setDeleteTarget(c) }}>{c.deleting ? 'Reintentar eliminación' : 'Eliminar campaña'}</button></article>)}</div><form className="login-form" onSubmit={e => { e.preventDefault(); void action(async () => { await createCampaign(profileName, name); setName('') }) }}><label>Nombre de la nueva campaña<input required maxLength={80} value={name} onChange={e => setName(e.target.value)} /></label><button disabled={busy}>{busy ? 'Guardando…' : 'Crear campaña'}</button></form><p className="local-note">Todos los perfiles comparten estas campañas. El perfil organiza las fichas; no limita el acceso.</p><button className="secondary" disabled={busy} onClick={() => setLocal(true)}>Consultar mis datos locales</button>{deleteTarget && <DeleteCampaignDialog name={deleteTarget.name} busy={deleteBusy} error={deleteError} onCancel={() => setDeleteTarget(null)} onDelete={() => { void confirmDelete() }} />}</main></div>
 }
 
 function CampaignJournal({ campaign }: { campaign: Campaign }) {

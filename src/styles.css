@@ -16,3 +16,4 @@ textarea:focus-visible{outline:2px solid var(--table-accent);outline-offset:4px}
 .cloud-banner button{min-height:44px}.shared-journal .sheet-actions{gap:12px}
 @media(max-width:700px){.shared-journal{margin:20px 16px;padding:20px}.campaign-lobby .section-heading{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+.campaign-entry{margin:24px 0 30px}.campaign-entry .campaign-choice{margin:0 0 10px}.campaign-entry>.danger{font-size:12px;min-height:44px}.campaign-entry .campaign-choice:disabled{cursor:not-allowed}
