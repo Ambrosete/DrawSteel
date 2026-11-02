@@ -2,6 +2,12 @@
 
 Plataforma web de aficionados para gestionar campañas de Draw Steel con React, TypeScript y Vite.
 
+## Campañas compartidas con Firebase
+
+La mesa compartida funciona sin Firebase Authentication: se elige un perfil sin cuenta ni contraseña. Todos los visitantes pueden consultar las campañas, crear personajes, editar sus fichas y modificar el cuaderno compartido. El perfil organiza los personajes, pero no acredita identidad ni limita permisos. Firestore distribuye las ediciones en tiempo real y las transacciones detectan conflictos de edición.
+
+El proyecto configurado por defecto es `tyranny-ae3d2`. Para activar los servicios sigue [FIREBASE.md](FIREBASE.md): crea Firestore y publica `firestore.rules`. No se necesita activar Authentication ni autorizar dominios de acceso. Las variables de `.env.example` son opcionales y permiten seleccionar otro entorno (también en GitHub Actions para Pages). El modo local sigue disponible desde la entrada.
+
 ## Desarrollo
 
 Requiere Node.js 24 y npm 11.
@@ -16,13 +22,13 @@ npm run dev
 - `npm run build`: comprueba TypeScript y genera la aplicación estática en `dist/`.
 - `npm run preview`: sirve la compilación localmente.
 
-## Entrada y personajes
+## Entrada y personajes en modo local
 
-El flujo es **perfil → campaña Tyranny → elegir o crear personaje → mesa de juego**. Se ofrecen Gabriel, David, Mateo, Adrián, Andrés y Quique. Gabriel tiene la contraseña local solicitada; los demás perfiles entran sin contraseña. Se vuelve a elegir perfil al recargar.
+El modo local mantiene el flujo **perfil → campaña Tyranny → elegir o crear personaje → mesa de juego**. Se ofrecen Gabriel, David, Mateo, Adrián, Andrés y Quique. Gabriel tiene la contraseña local del prototipo; los demás perfiles entran sin contraseña. Se vuelve a elegir perfil al recargar. En modo compartido todos los perfiles entran sin contraseña y utilizan las campañas de Firestore.
 
-Este control de entrada se ejecuta en el navegador: no constituye autenticación segura. La contraseña está en el código cliente. Los perfiles separan las listas en la interfaz, pero cualquier usuario con acceso al navegador puede leer o modificar el almacenamiento. No hay backend, sincronización entre dispositivos ni permisos de Director.
+El control de entrada local se ejecuta en el navegador: no constituye autenticación segura. La contraseña está en el código cliente. Los perfiles separan las listas en la interfaz, pero cualquier usuario con acceso al navegador puede leer o modificar el almacenamiento. Este modo no sincroniza datos. La mesa compartida tampoco autentica a los visitantes; sus reglas permiten acceso público a las campañas y personajes, con validación de datos.
 
-Los personajes antiguos y de ejemplo se eliminan de la colección `drawsteel.characters.v1` al abrir esta versión. La nueva colección `drawsteel.characters.v2` comienza vacía. Cada borrador queda vinculado a su perfil y a Tyranny, y se guarda en `localStorage`. Si no se puede guardar, la aplicación avisa de que los cambios solo durarán la sesión.
+En modo local se utiliza la colección `drawsteel.characters.v2`. Cada borrador queda vinculado a su perfil y a Tyranny, y se guarda en `localStorage`. Si no se puede guardar, la aplicación avisa de que los cambios solo durarán la sesión. No se borra la colección anterior ni se importan automáticamente datos locales a Firebase.
 
 El creador utiliza el catálogo de **Draw Steel Heroes v1.01b**, extraído del PDF comprimido aportado por el usuario: 12 ascendencias, 18 carreras, 9 clases, 21 kits y 100 complicaciones. Los nombres permanecen en inglés y cada selección muestra la página impresa y su posición en el PDF completo. El archivo recortado contiene 263 páginas: corresponde a las páginas 21–283 del PDF completo, numeradas 6–268 en el libro. El catálogo está en `src/rules-catalog.ts`; el PDF no se distribuye con la aplicación.
 
@@ -42,7 +48,7 @@ Hay botones **Eliminar personaje** en cada tarjeta y en la ficha. Un diálogo na
 
 Las fichas siguen siendo borradores: no se automatizan el gasto de recursos, el combate, la compra de rasgos de ascendencia, ventajas/perks, habilidades de pruebas/skills, rasgos pasivos de cada nivel ni efectos de las complicaciones. La selección detallada de habilidades de combate no equivale a una ficha completamente automatizada. El Director revisa estas otras mejoras con el manual. Los nombres de habilidades propias guardados antes del catálogo se conservan.
 
-`npm test` comprueba datos, perfiles, catálogo, distribuciones de características, las elecciones de todas las subclases en niveles 1–10, compatibilidad de borradores y borrado por propietario. El workflow de Pages ejecuta las pruebas antes de compilar. Campañas compartidas, tablero y combate siguen pendientes.
+`npm test` comprueba datos, perfiles, catálogo, distribuciones de características, las elecciones de todas las subclases en niveles 1–10, compatibilidad de borradores, borrado por propietario, modelos compartidos y detección de revisiones obsoletas. El workflow de Pages ejecuta las pruebas antes de compilar. Tablero y combate siguen pendientes. Consulta en `FIREBASE.md` la verificación con dos sesiones y emuladores.
 
 ## GitHub Pages
 

@@ -7,8 +7,8 @@ export type Character = {
   id: string
   level?: number
   training?: Training
-  owner: Profile
-  campaign: 'Tyranny'
+  owner: string
+  campaign: string
   name: string
   ancestry: string
   background: string
