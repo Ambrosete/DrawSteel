@@ -33,3 +33,14 @@ textarea:focus-visible{outline:2px solid var(--table-accent);outline-offset:4px}
 .transfer-dialog label{display:block;font-size:14px;margin-bottom:24px}.transfer-dialog .dialog-actions{margin-top:24px}
 @media(max-width:700px){.ability-card-grid{grid-template-columns:1fr}.ability-card-content{padding:16px}.ability-card-name{font-size:21px}}
 @media(prefers-reduced-motion:reduce){.creator label.ability-choice{transition:none}}
+.ability-card-content{width:100%;min-width:0;text-align:center}
+.ability-card-heading{display:grid;grid-template-columns:minmax(0,1fr);justify-items:center}.ability-card-cost{max-width:100%;text-align:center}
+.ability-card-text{width:100%;white-space:normal;text-align:center;font-size:14px}
+.ability-paragraph{display:block;margin:0 0 12px}.ability-paragraph:last-child{margin-bottom:0}
+.ability-slot-fixed .ability-card{width:100%;max-width:none}
+.ability-flavor{display:block;width:100%;margin:0 0 18px;padding:16px 18px;background:#fff;color:#6b7280;border-radius:10px;font:italic 15px/1.75 Georgia,serif}
+.ability-roll{display:block;width:100%;margin:18px 0;background:#fff;color:#33232b;border:1px solid #e5dce0;border-radius:16px;padding:16px}
+.ability-roll-title{display:block;font-weight:700;font-size:14px;padding-bottom:12px}
+.ability-roll-result{display:grid;grid-template-columns:64px minmax(0,1fr);gap:12px;align-items:start;border-top:1px solid #e5dce0;padding:12px 0}
+.ability-roll-result:last-child{padding-bottom:0}.ability-roll-label{display:block;background:#f3edf0;color:#68243b;border-radius:7px;padding:3px 6px;font-size:13px}
+@media(max-width:440px){.ability-roll{padding:12px}.ability-roll-result{grid-template-columns:52px minmax(0,1fr);gap:8px}.ability-flavor{padding:14px}}

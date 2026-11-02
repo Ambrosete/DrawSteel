@@ -2,9 +2,18 @@ import { useId } from 'react'
 import type { Ability } from './ability-catalog'
 import { abilitySlots, slotOptions, subclassOptions } from './progression'
 import type { Training } from './progression'
+import { formatAbilityText } from './ability-text'
+
+function AbilityText({ details }: { details: string }) {
+  return <span className="ability-card-text">{formatAbilityText(details).map((block, index) => block.kind === 'roll'
+    ? <span className="ability-roll" role="group" aria-label={block.title} key={index}><span className="ability-roll-title">{block.title}</span>{block.tiers.map((result, tierIndex) => <span className="ability-roll-result" key={tierIndex}><strong className="ability-roll-label">{result.label}</strong><span>{result.text}</span></span>)}</span>
+    : block.kind === 'quote'
+      ? <span className="ability-flavor" key={index}><em>{block.text}</em></span>
+      : <span className="ability-paragraph" key={index}>{block.text}</span>)}</span>
+}
 
 function AbilityCardContent({ ability }: { ability: Ability }) {
-  return <span className="ability-card-content"><span className="ability-card-heading"><span className="ability-card-name">{ability.name}</span><span className="ability-card-cost">{ability.cost ? `${ability.cost} ${ability.resource}` : 'Sin coste'}</span></span><span className="ability-card-meta">{ability.heroClass}{ability.subclass ? ` · ${ability.subclass}` : ''}{ability.kit ? ` · ${ability.kit}` : ''} · Manual p. {ability.bookPage}</span><span className="ability-card-text">{ability.details}</span></span>
+  return <span className="ability-card-content"><span className="ability-card-heading"><span className="ability-card-name">{ability.name}</span><span className="ability-card-cost">{ability.cost ? `${ability.cost} ${ability.resource}` : 'Sin coste'}</span></span><span className="ability-card-meta">{ability.heroClass}{ability.subclass ? ` · ${ability.subclass}` : ''}{ability.kit ? ` · ${ability.kit}` : ''} · Manual p. {ability.bookPage}</span><AbilityText details={ability.details} /></span>
 }
 export function AbilityDetails({ ability }: { ability: Ability }) {
   return <article className="ability-card" aria-label={ability.name}><AbilityCardContent ability={ability} /></article>
