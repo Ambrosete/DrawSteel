@@ -5,7 +5,7 @@ import { isSharedCharacter } from '../src/cloud-model.ts'
 import type { SharedCharacter } from '../src/cloud-model.ts'
 
 const character: SharedCharacter = {
-  id: 'hero-1', owner: 'David', campaign: 'source', revision: 8, name: 'Luna', level: 7,
+  id: 'hero-1', owner: 'David', campaign: 'source', revision: 8, name: 'Luna', level: 7, combatCounter: 7,
   ancestry: 'Human', background: 'Artisan', heroClass: 'Censor', kit: 'Warrior', secondKit: 'Archer',
   complication: 'Amnesia', status: 'draft', rulesVersion: '1.01b',
   culture: { environment: 'Urban', organization: 'Communal', upbringing: 'Academic', language: 'Anjali' },

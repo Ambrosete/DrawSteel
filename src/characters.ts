@@ -6,6 +6,7 @@ export type Characteristic = typeof characteristicNames[number]
 export type Character = {
   id: string
   level?: number
+  combatCounter?: number
   training?: Training
   owner: string
   campaign: string
@@ -33,6 +34,7 @@ export function isCharacter(value: unknown): value is Character {
     && (c.level === undefined || (typeof c.level === 'number' && Number.isInteger(c.level) && c.level >= 1 && c.level <= 10))
     && (c.training === undefined || (!!c.training && typeof c.training === 'object' && Array.isArray((c.training as Training).subclasses) && (c.training as Training).subclasses.every(s => typeof s === 'string') && !!(c.training as Training).choices && typeof (c.training as Training).choices === 'object' && !Array.isArray((c.training as Training).choices) && Object.values((c.training as Training).choices).every(id => typeof id === 'string')))
     && (c.secondKit === undefined || typeof c.secondKit === 'string')
+    && (c.combatCounter === undefined || (typeof c.combatCounter === 'number' && Number.isInteger(c.combatCounter) && Math.abs(c.combatCounter) <= 1_000_000_000))
     && (c.culture === undefined || (!!c.culture && typeof c.culture === 'object' && ['environment', 'organization', 'upbringing', 'language'].every(key => typeof (c.culture as Record<string, unknown>)[key] === 'string')))
     && (c.rulesVersion === undefined || c.rulesVersion === '1.01b')
     && profiles.includes(c.owner as Profile) && c.campaign === 'Tyranny' && c.status === 'draft'

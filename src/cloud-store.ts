@@ -5,8 +5,20 @@ import type { Campaign, SharedCharacter } from './cloud-model'
 import type { Character } from './characters'
 import { deleteCampaignInStages } from './campaign-deletion'
 import { prepareCharacterTransfer } from './character-transfer'
+import { nextCombatCounter } from './combat-counter'
+import type { CounterOperation } from './combat-counter'
 
 function database() { if (!db) throw new Error('Firebase no está configurado.'); return db }
+export async function changeSharedCombatCounter(campaignId: string, characterId: string, operation: CounterOperation) {
+  await runTransaction(database(), async tx => {
+    const campaign = await tx.get(doc(database(), 'campaigns', campaignId))
+    if (!campaign.exists() || campaign.data().deleting) throw new Error('Esta campaña no está disponible o se está eliminando.')
+    const ref = doc(database(), 'campaigns', campaignId, 'characters', characterId)
+    const snapshot = await tx.get(ref)
+    if (!snapshot.exists()) throw new Error('El personaje se ha eliminado o transferido a otra campaña.')
+    tx.update(ref, { combatCounter: nextCombatCounter(snapshot.data().combatCounter, operation), revision: snapshot.data().revision + 1, updatedAt: serverTimestamp() })
+  })
+}
 export async function transferSharedCharacter(sourceId: string, destinationId: string, character: SharedCharacter) {
   if (sourceId === destinationId) throw new Error('Elige una campaña diferente a la de origen.')
   await runTransaction(database(), async tx => {
@@ -42,14 +54,16 @@ export async function createCampaign(profileName: string, name: string) {
   const ref = doc(collection(database(), 'campaigns'))
   await setDoc(ref, { name: trimmed, ownerId: profileName, notes: '', revision: 1, updatedAt: serverTimestamp() })
 }
-export async function editCampaign(campaign: Campaign, changes: { notes: string }) {
+export async function editCampaign(campaign: Campaign, changes: { notes: string } | { name: string }) {
+  const patch = 'name' in changes ? { name: changes.name.trim() } : changes
+  if ('name' in patch && (!patch.name || patch.name.length > 80)) throw new Error('Escribe un nombre de 1 a 80 caracteres.')
   await runTransaction(database(), async tx => {
     const ref = doc(database(), 'campaigns', campaign.id)
     const snapshot = await tx.get(ref)
     if (!snapshot.exists()) throw new Error('La campaña ya no está disponible.')
     if (snapshot.data().deleting) throw new Error('Esta campaña se está eliminando.')
     assertRevision(snapshot.data().revision, campaign.revision)
-    tx.update(ref, { ...changes, revision: campaign.revision + 1, updatedAt: serverTimestamp() })
+    tx.update(ref, { ...patch, revision: campaign.revision + 1, updatedAt: serverTimestamp() })
   })
 }
 export async function saveSharedCharacter(campaignId: string, profileName: string, character: Character, expectedRevision: number) {

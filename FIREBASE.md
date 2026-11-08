@@ -43,6 +43,8 @@ Ese inicio de sesión corresponde a la herramienta de administración en tu orde
 5. Cada campaña mantiene su colección de personajes y sus notas independientes.
 6. En la lista de campañas, **Eliminar campaña** abre un diálogo que identifica la campaña y pide confirmación. Al confirmar se borran todos sus personajes, sus notas y la campaña. No hay recuperación automática.
 7. En la lista de personajes o en una ficha, **Transferir personaje** permite moverlo a otra campaña disponible. Se conservan todos sus datos y deja de aparecer en origen. El destino no puede contener ya una ficha con el mismo identificador. El movimiento es atómico y comprueba que ambas campañas siguen disponibles y que el personaje no ha cambiado desde que se abrió el diálogo. No requiere cambios adicionales en las reglas.
+8. **Cambiar nombre** está disponible junto a cada campaña y en la barra superior de la mesa abierta. El diálogo permite introducir entre 1 y 80 caracteres y guardar o cancelar. El nombre se actualiza para todos los jugadores y en la selección recordada por el navegador, conservando el identificador y los datos de la campaña. Para activar esta opción hay que volver a publicar `firestore.rules`: la lista de campos editables de una campaña incluye ahora `name`. Se siguen rechazando cambios concurrentes y nombres vacíos o demasiado largos.
+9. **Combate** muestra las habilidades elegidas y de kit del personaje seleccionado, junto a un contador propio de esa ficha que empieza en 0. Sumar, restar y resetear se guardan mediante transacciones; el contador se conserva al recargar y transferir. También hay que publicar las reglas actuales para admitir el campo opcional `combatCounter` en los personajes. Los valores se validan como enteros entre -1000000000 y 1000000000.
 
 Para activar este botón debes volver a publicar la versión actual de `firestore.rules`: las reglas anteriores rechazaban la eliminación de campañas. La aplicación marca primero la campaña con `deleting: true`, lo que bloquea nuevas fichas y ediciones. Después elimina los personajes por lotes de hasta 400 y, al terminar, elimina el documento de campaña con sus notas. Si se interrumpe, aparece **Reintentar eliminación** para completar la limpieza; la campaña no puede abrirse mientras está marcada. No se modifican datos de otras campañas.
 
@@ -56,7 +58,7 @@ El modo local del prototipo sigue disponible mediante **Consultar mis datos loca
 - Una transferencia lee la ficha actual en el servidor y la guarda en destino con revisión 1; el identificador y su perfil se conservan. Se evita sobrescribir otra ficha y una transferencia obsoleta falla sin borrar el original. Ambas listas reciben el cambio mediante sus listeners.
 - Ante un conflicto de notas, copia tu borrador y utiliza **Cargar versión compartida**. En progresión, cancela y vuelve a abrir la mejora para partir de la ficha actual.
 - Las transacciones necesitan conexión al servidor. Un error mantiene el formulario abierto; la barra indica si los datos proceden de caché.
-- Todavía no hay notas privadas, tablero ni combate.
+- Todavía no hay notas privadas, tablero ni automatización de tiradas o encuentros. La pestaña Combate ofrece cartas de habilidades y un contador manual.
 
 ## Verificación
 
