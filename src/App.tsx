@@ -11,6 +11,9 @@ import type { Character, Profile } from './characters'
 import type { CloudSession } from './CloudApp'
 import type { Campaign, SharedCharacter } from './cloud-model'
 import { localSessionKey, readSavedSession, saveSession } from './saved-session'
+import CombatPanel from './CombatPanel'
+import { nextCombatCounter } from './combat-counter'
+import type { CounterOperation } from './combat-counter'
 
 type Page = 'inicio' | 'personajes' | 'campanas' | 'combate' | 'reglas'
 const navigation: { id: Page; label: string; icon: string }[] = [
@@ -98,6 +101,12 @@ export default function App({ cloud }: { cloud?: CloudSession }) {
     if (selectedId === transferTarget.id) { setSelectedId(null); setTrainingTarget(null); setPage('personajes'); location.hash = 'personajes' }
     setTransferTarget(null)
   }
+  async function changeCounter(operation: CounterOperation) {
+    if (!selected) return
+    if (cloud) { await cloud.changeCounter(selected.id, operation); return }
+    const combatCounter = nextCombatCounter(selected.combatCounter, operation)
+    setCharacters(previous => previous.map(c => c.id === selected.id && c.owner === profile && c.campaign === 'Tyranny' ? { ...c, combatCounter } : c))
+  }
   const storageNotice = <>{saveError && <p role="alert" className="notice">{saveError}</p>}{saving && <p role="status">Guardando en la mesa…</p>}{!cloud && storageError && <p role="status" className="notice">No se pueden guardar los cambios en este navegador. Se conservarán solo durante esta sesión.</p>}</>
 
   if (!profile) return <div className="entry-shell"><main className="entry-panel"><div className="eyebrow">DRAWSTEEL · TU MESA DE AVENTURAS</div><h1>¿Quién entra<br />a la aventura?</h1><p className="intro">Elige tu perfil para continuar.</p><form onSubmit={login} className="login-form"><label>Perfil<select name="profile" value={loginChoice} onChange={e => { setLoginChoice(e.target.value as Profile); setPassword(''); setLoginError('') }}>{profiles.map(name => <option key={name}>{name}</option>)}</select></label>{loginChoice === 'Gabriel' && <label>Contraseña<input name="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required autoComplete="current-password" /></label>}{loginError && <p role="alert" className="error">{loginError}</p>}<button type="submit">Entrar ↗</button></form><p className="local-note">Acceso local de prototipo. Los perfiles y la contraseña no protegen los datos frente a otros usuarios de este navegador. Los demás perfiles no requieren contraseña.</p>{storageNotice}</main></div>
@@ -130,8 +139,8 @@ export default function App({ cloud }: { cloud?: CloudSession }) {
         {(selected.level ?? 1) === 10 && <p className="notice">Nivel máximo del manual: 10.</p>}
         <div className="ability-card-grid">{chosenAbilities(selected).map(ability => <AbilityDetails key={ability.id} ability={ability} />)}</div>
       </section>}
-      <div className="section-heading"><h2>Tu mesa de juego</h2></div><div className="feature-grid">{navigation.slice(1).map(n => <a className="feature-card" href={`#${n.id}`} key={n.id}><span className="feature-icon">{n.icon}</span><h3>{n.label}<span>↗</span></h3><small>{n.id === 'personajes' ? `${mine.length} personajes` : n.id === 'campanas' ? campaignName : 'Próximamente'}</small></a>)}</div>
-    </> : page === 'campanas' ? <><h1>{campaignName}</h1><p className="intro">{cloud ? 'Consulta el cuaderno compartido al final de la página. Todos los perfiles pueden consultar y editar la mesa.' : 'Esta campaña se guarda solo en este navegador.'}</p><button onClick={() => cloud ? cloud.leave() : setCampaign(null)}>Volver a elegir campaña</button></> : <><div className="eyebrow">CONSTRUYENDO LA AVENTURA</div><h1>{page === 'combate' ? 'Combate' : 'Reglas'}</h1><div className="placeholder"><h2>{page === 'combate' ? 'Prepara tu próximo encuentro.' : 'El manual, junto a tu mesa.'}</h2><p>{page === 'combate' ? 'El tablero, las tiradas y los combates supervisados por el Director se incorporarán en próximas versiones.' : 'El creador incorpora 12 ascendencias, 18 carreras, 9 clases, 21 kits y 100 complicaciones de Draw Steel Heroes v1.01b, con referencias de página. Valida características iniciales y acceso a kits. Los efectos de rasgos, habilidades y complicaciones se consultan con el Director.'}</p><a className="button" href="#inicio">Volver a mi personaje</a></div></>}
+      <div className="section-heading"><h2>Tu mesa de juego</h2></div><div className="feature-grid">{navigation.slice(1).map(n => <a className="feature-card" href={`#${n.id}`} key={n.id}><span className="feature-icon">{n.icon}</span><h3>{n.label}<span>↗</span></h3><small>{n.id === 'personajes' ? `${mine.length} personajes` : n.id === 'campanas' ? campaignName : n.id === 'combate' ? 'Habilidades y contador' : 'Próximamente'}</small></a>)}</div>
+    </> : page === 'combate' ? <CombatPanel key={selected.id} character={selected} reconnecting={cloud?.reconnecting} onCounterChange={changeCounter} /> : page === 'campanas' ? <><h1>{campaignName}</h1><p className="intro">{cloud ? 'Consulta el cuaderno compartido al final de la página. Todos los perfiles pueden consultar y editar la mesa.' : 'Esta campaña se guarda solo en este navegador.'}</p><button onClick={() => cloud ? cloud.leave() : setCampaign(null)}>Volver a elegir campaña</button></> : <><div className="eyebrow">EL MANUAL EN TU MESA</div><h1>Reglas</h1><div className="placeholder"><h2>El manual, junto a tu mesa.</h2><p>El creador incorpora 12 ascendencias, 18 carreras, 9 clases, 21 kits y 100 complicaciones de Draw Steel Heroes v1.01b, con referencias de página. Valida características iniciales y acceso a kits. Los efectos de rasgos, habilidades y complicaciones se consultan con el Director.</p><a className="button" href="#inicio">Volver a mi personaje</a></div></>}
     </fieldset>{deleteTarget && <DeleteCharacterDialog name={deleteTarget.name} shared={!!cloud} busy={saving} onCancel={() => setDeleteTarget(null)} onDelete={deleteCharacter} />}
     {transferTarget && cloud && <TransferCharacterDialog character={transferTarget} source={campaignName} destinations={cloud.campaigns.filter(c => c.id !== cloud.campaign.id && !c.deleting)} onTransfer={transferCharacter} onCancel={() => setTransferTarget(null)} />}
     <footer>DRAWSTEEL <span>{campaignName} · {displayName}</span><small>{cloud ? 'Mesa compartida' : 'Modo local · Datos en este navegador'}</small></footer>

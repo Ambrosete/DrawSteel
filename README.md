@@ -8,6 +8,10 @@ La mesa compartida funciona sin Firebase Authentication: se elige un perfil sin 
 
 El proyecto configurado por defecto es `tyranny-ae3d2`. Para activar los servicios sigue [FIREBASE.md](FIREBASE.md): crea Firestore y publica `firestore.rules`. No se necesita activar Authentication ni autorizar dominios de acceso. Las variables de `.env.example` son opcionales y permiten seleccionar otro entorno (también en GitHub Actions para Pages). El modo local sigue disponible desde la entrada.
 
+**Cambiar nombre** permite renombrar una campaña desde la lista o desde la mesa abierta, con un máximo de 80 caracteres. El cambio se comparte en tiempo real y conserva los personajes y notas. Requiere publicar la versión actual de `firestore.rules`, que permite editar el campo `name`.
+
+**Combate** muestra las habilidades registradas del personaje seleccionado, incluidas las de sus kits, en cartas completas. Su contador empieza en 0 y tiene controles para sumar 1, restar 1 y resetear a cero. Se guarda por personaje, admite valores negativos y se conserva al recargar o transferir la ficha. En modo compartido usa transacciones para aplicar incrementos sobre el valor actual del servidor. Para guardar el contador, publica las reglas actuales, que admiten `combatCounter` en las fichas.
+
 En las tarjetas de personajes y en la ficha, **Transferir personaje** permite elegir otra campaña. El movimiento conserva el identificador, el perfil, el nivel, la progresión y el resto de la ficha; una transacción crea la ficha en destino y la retira del origen sin sobrescribir personajes existentes. No se permiten transferencias a campañas eliminándose. Esta opción utiliza las reglas actuales y no requiere otra modificación de permisos.
 
 Las habilidades se muestran en cartas con todo su texto visible. Al crear o subir de nivel, cada elección presenta todas sus opciones en una cuadrícula: pulsa una carta o utiliza sus controles de selección con el teclado. Las elecciones anteriores permanecen visibles y bloqueadas; las habilidades repetidas no pueden elegirse en otra posición. Las nuevas elecciones se guardan al confirmar.
@@ -56,7 +60,7 @@ Hay botones **Eliminar personaje** en cada tarjeta y en la ficha. Un diálogo na
 
 Las fichas siguen siendo borradores: no se automatizan el gasto de recursos, el combate, la compra de rasgos de ascendencia, ventajas/perks, habilidades de pruebas/skills, rasgos pasivos de cada nivel ni efectos de las complicaciones. La selección detallada de habilidades de combate no equivale a una ficha completamente automatizada. El Director revisa estas otras mejoras con el manual. Los nombres de habilidades propias guardados antes del catálogo se conservan.
 
-`npm test` comprueba datos, perfiles, catálogo, distribuciones de características, las elecciones de todas las subclases en niveles 1–10, compatibilidad de borradores, borrado por propietario, modelos compartidos y detección de revisiones obsoletas. El workflow de Pages ejecuta las pruebas antes de compilar. Tablero y combate siguen pendientes. Consulta en `FIREBASE.md` la verificación con dos sesiones y emuladores.
+`npm test` comprueba datos, perfiles, catálogo, distribuciones de características, las elecciones de todas las subclases en niveles 1–10, compatibilidad de borradores, borrado por propietario, modelos compartidos, contador y detección de revisiones obsoletas. El workflow de Pages ejecuta las pruebas antes de compilar. El tablero y la automatización del combate siguen pendientes. Consulta en `FIREBASE.md` la verificación con dos sesiones y emuladores.
 
 ## GitHub Pages
 

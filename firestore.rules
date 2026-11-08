@@ -21,13 +21,13 @@ service cloud.firestore {
       allow update: if validCampaign(request.resource.data)
         && !deleting(resource.data)
         && request.resource.data.revision == resource.data.revision + 1
-        && ((!deleting(request.resource.data) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['notes', 'revision', 'updatedAt']))
+        && ((!deleting(request.resource.data) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'notes', 'revision', 'updatedAt']))
           || (deleting(request.resource.data) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deleting', 'revision', 'updatedAt'])));
       allow delete: if deleting(resource.data);
       match /characters/{characterId} {
         function validCharacter(data) {
           return data.keys().hasAll(['id', 'owner', 'campaign', 'name', 'ancestry', 'background', 'heroClass', 'kit', 'complication', 'characteristics', 'status', 'revision', 'updatedAt'])
-            && data.keys().hasOnly(['id', 'owner', 'campaign', 'name', 'ancestry', 'background', 'heroClass', 'kit', 'complication', 'characteristics', 'status', 'revision', 'updatedAt', 'level', 'training', 'secondKit', 'culture', 'rulesVersion'])
+            && data.keys().hasOnly(['id', 'owner', 'campaign', 'name', 'ancestry', 'background', 'heroClass', 'kit', 'complication', 'characteristics', 'status', 'revision', 'updatedAt', 'level', 'training', 'secondKit', 'culture', 'rulesVersion', 'combatCounter'])
             && data.id == characterId && data.campaign == campaignId
             && data.owner is string && data.owner.size() > 0 && data.owner.size() <= 128 && data.status == 'draft'
             && data.name is string && data.name.size() > 0 && data.name.size() <= 80
@@ -38,6 +38,7 @@ service cloud.firestore {
             && score(data.characteristics['Fuerza']) && score(data.characteristics['Agilidad'])
             && score(data.characteristics['Razón']) && score(data.characteristics['Intuición']) && score(data.characteristics['Presencia'])
             && (!('level' in data) || (data.level is int && data.level >= 1 && data.level <= 10))
+            && (!('combatCounter' in data) || (data.combatCounter is int && data.combatCounter >= -1000000000 && data.combatCounter <= 1000000000))
             && data.revision is int && data.updatedAt == request.time;
         }
         function score(value) { return value is int && value >= -2 && value <= 5; }

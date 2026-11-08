@@ -47,3 +47,5 @@ textarea:focus-visible{outline:2px solid var(--table-accent);outline-offset:4px}
 .ability-keywords{display:block;width:100%;margin:0 0 12px;color:#fff;font-weight:700}
 .ability-distance{display:block;width:100%;margin:16px 0;padding:16px;background:#fff;color:#33232b;border:1px solid #e5dce0;border-radius:16px;text-align:center}
 .ability-distance strong{display:block;font-weight:700;margin-bottom:6px}.ability-distance>span{display:block}
+.rename-dialog label{display:block;font-size:14px;margin-bottom:22px}.rename-dialog .dialog-actions{margin-top:24px}.campaign-entry>.secondary{min-height:44px;margin-right:10px}
+.combat-counter{text-align:center}.combat-counter h2{font:500 25px Georgia,serif}.combat-counter-value{display:block;font:600 62px/1.2 Georgia,serif;color:#efd49d;margin:18px 0}.combat-counter-actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}.combat-counter .error{margin-top:20px}.combat-counter-actions button{min-height:44px}
