@@ -55,3 +55,5 @@ textarea:focus-visible{outline:2px solid var(--table-accent);outline-offset:4px}
 .ability-distance,.ability-target{display:block;width:fit-content;max-width:100%;margin:8px auto 8px 0;padding:7px 10px;background:#fff;color:#33232b;border:1px solid #e5dce0;border-radius:0;text-align:left;font-size:13px;line-height:1.5}
 .ability-distance strong,.ability-target strong{display:inline;font-weight:700;margin:0}
 @media(max-width:440px){.ability-roll{padding:9px}.ability-roll-result{grid-template-columns:44px minmax(0,1fr);gap:6px}}
+
+.recovery-maximum{font-size:32px;color:var(--muted,#b9b6ad)}.recovery-source{font-size:13px;line-height:1.6;margin-top:20px}

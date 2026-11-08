@@ -7,8 +7,22 @@ import { deleteCampaignInStages } from './campaign-deletion'
 import { prepareCharacterTransfer } from './character-transfer'
 import { nextCombatCounter } from './combat-counter'
 import type { CounterOperation } from './combat-counter'
+import { nextRecoveriesSpent } from './recoveries'
+import type { RecoveryOperation } from './recoveries'
 
 function database() { if (!db) throw new Error('Firebase no está configurado.'); return db }
+export async function changeSharedRecoveries(campaignId: string, characterId: string, operation: RecoveryOperation) {
+  await runTransaction(database(), async tx => {
+    const campaign = await tx.get(doc(database(), 'campaigns', campaignId))
+    if (!campaign.exists() || campaign.data().deleting) throw new Error('Esta campaña no está disponible o se está eliminando.')
+    const ref = doc(database(), 'campaigns', campaignId, 'characters', characterId)
+    const snapshot = await tx.get(ref)
+    if (!snapshot.exists()) throw new Error('El personaje se ha eliminado o transferido a otra campaña.')
+    const current = { ...snapshot.data(), id: snapshot.id }
+    if (!isSharedCharacter(current, campaignId)) throw new Error('La ficha contiene datos inválidos.')
+    tx.update(ref, { recoveriesSpent: nextRecoveriesSpent(current, operation), revision: current.revision + 1, updatedAt: serverTimestamp() })
+  })
+}
 export async function changeSharedCombatCounter(campaignId: string, characterId: string, operation: CounterOperation) {
   await runTransaction(database(), async tx => {
     const campaign = await tx.get(doc(database(), 'campaigns', campaignId))

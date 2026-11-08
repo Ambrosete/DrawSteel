@@ -3,9 +3,11 @@ import { AbilityDetails } from './AbilityPicker'
 import { chosenAbilities } from './progression'
 import type { Character } from './characters'
 import type { CounterOperation } from './combat-counter'
+import RecoveriesCounter from './RecoveriesCounter'
+import type { RecoveryOperation } from './recoveries'
 
-export default function CombatPanel({ character, reconnecting = false, onCounterChange }: {
-  character: Character; reconnecting?: boolean; onCounterChange: (operation: CounterOperation) => Promise<void>
+export default function CombatPanel({ character, reconnecting = false, onCounterChange, onRecoveriesChange }: {
+  character: Character; reconnecting?: boolean; onCounterChange: (operation: CounterOperation) => Promise<void>; onRecoveriesChange: (operation: RecoveryOperation) => Promise<void>
 }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -24,6 +26,7 @@ export default function CombatPanel({ character, reconnecting = false, onCounter
       <div className="combat-counter-actions"><button type="button" className="secondary" disabled={busy || reconnecting} aria-label="Restar 1 al contador" onClick={() => { void change('decrement') }}>− Restar</button><button type="button" disabled={busy || reconnecting} aria-label="Sumar 1 al contador" onClick={() => { void change('increment') }}>+ Sumar</button><button type="button" className="secondary" disabled={busy || reconnecting} onClick={() => { void change('reset') }}>Resetear a cero</button></div>
       {error && <p role="alert" className="error">{error}</p>}{busy && <p role="status">Guardando contador…</p>}
     </section>
+    <RecoveriesCounter character={character} reconnecting={reconnecting} onChange={onRecoveriesChange} />
     <div className="section-heading"><h2>Habilidades de {character.name}</h2><span>{abilities.length} habilidades</span></div>
     {abilities.length ? <div className="ability-card-grid">{abilities.map(ability => <AbilityDetails key={ability.id} ability={ability} />)}</div> : <p className="notice">Este personaje todavía no tiene habilidades registradas en el catálogo. Completa sus elecciones desde su ficha.</p>}
   </section>

@@ -62,6 +62,8 @@ El modo local del prototipo sigue disponible mediante **Consultar mis datos loca
 
 ## Verificación
 
+El contador **Recoveries** guarda `recoveriesSpent` por ficha. Publica la versión actual de `firestore.rules` para admitir este campo opcional entero no negativo. Las transacciones calculan el gasto sobre la clase, nivel, subclase y contador actuales del servidor, sin perder cambios simultáneos. El máximo se deriva del manual y las fichas antiguas tienen cero gastadas. Comprueba con dos sesiones que gastar, devolver y descansar se comparte; recargar, subir de nivel o transferir conserva el gasto. Sin publicar las reglas, la web muestra el error de permisos y no confirma el cambio.
+
 Ejecuta `npm test`, `npm run typecheck` y `npm run build`. Para pruebas sin datos reales, usa Java compatible con Firebase Emulator Suite y:
 
 ```sh
