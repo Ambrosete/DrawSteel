@@ -27,7 +27,7 @@ service cloud.firestore {
       match /characters/{characterId} {
         function validCharacter(data) {
           return data.keys().hasAll(['id', 'owner', 'campaign', 'name', 'ancestry', 'background', 'heroClass', 'kit', 'complication', 'characteristics', 'status', 'revision', 'updatedAt'])
-            && data.keys().hasOnly(['id', 'owner', 'campaign', 'name', 'ancestry', 'background', 'heroClass', 'kit', 'complication', 'characteristics', 'status', 'revision', 'updatedAt', 'level', 'training', 'secondKit', 'culture', 'rulesVersion', 'combatCounter'])
+            && data.keys().hasOnly(['id', 'owner', 'campaign', 'name', 'ancestry', 'background', 'heroClass', 'kit', 'complication', 'characteristics', 'status', 'revision', 'updatedAt', 'level', 'training', 'secondKit', 'culture', 'rulesVersion', 'combatCounter', 'recoveriesSpent'])
             && data.id == characterId && data.campaign == campaignId
             && data.owner is string && data.owner.size() > 0 && data.owner.size() <= 128 && data.status == 'draft'
             && data.name is string && data.name.size() > 0 && data.name.size() <= 80
@@ -39,6 +39,7 @@ service cloud.firestore {
             && score(data.characteristics['Razón']) && score(data.characteristics['Intuición']) && score(data.characteristics['Presencia'])
             && (!('level' in data) || (data.level is int && data.level >= 1 && data.level <= 10))
             && (!('combatCounter' in data) || (data.combatCounter is int && data.combatCounter >= -1000000000 && data.combatCounter <= 1000000000))
+            && (!('recoveriesSpent' in data) || (data.recoveriesSpent is int && data.recoveriesSpent >= 0 && data.recoveriesSpent <= 1000000000))
             && data.revision is int && data.updatedAt == request.time;
         }
         function score(value) { return value is int && value >= -2 && value <= 5; }

@@ -10,6 +10,8 @@ import type { Character, Profile } from './characters'
 import { readSavedSession, saveSession, sharedSessionKey, readLocalMode, saveLocalMode } from './saved-session'
 import { readResumeView, saveResumeView } from './resume-view'
 import type { CounterOperation } from './combat-counter'
+import { changeSharedRecoveries } from './cloud-store'
+import type { RecoveryOperation } from './recoveries'
 
 export type CloudSession = {
   profileName: string
@@ -21,6 +23,7 @@ export type CloudSession = {
   selectCharacter: (id: string | null) => void
   reconnecting: boolean
   changeCounter: (characterId: string, operation: CounterOperation) => Promise<void>
+  changeRecoveries: (characterId: string, operation: RecoveryOperation) => Promise<void>
   transfer: (character: Character, destinationId: string) => Promise<void>
   save: (character: Character, revision: number) => Promise<void>
   remove: (character: Character) => Promise<void>
@@ -99,6 +102,7 @@ export default function CloudApp() {
       selectedCharacterId, selectCharacter: setSelectedCharacterId,
       reconnecting: cached || campaignsCached,
       changeCounter: (characterId, operation) => changeSharedCombatCounter(active.id, characterId, operation),
+      changeRecoveries: (characterId, operation) => changeSharedRecoveries(active.id, characterId, operation),
       transfer: (character, destinationId) => transferSharedCharacter(active.id, destinationId, character as SharedCharacter),
       save: (character, revision) => saveSharedCharacter(active.id, profileName, character, revision),
       remove: character => deleteSharedCharacter(active.id, character as SharedCharacter),
