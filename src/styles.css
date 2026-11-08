@@ -49,3 +49,9 @@ textarea:focus-visible{outline:2px solid var(--table-accent);outline-offset:4px}
 .ability-distance strong{display:block;font-weight:700;margin-bottom:6px}.ability-distance>span{display:block}
 .rename-dialog label{display:block;font-size:14px;margin-bottom:22px}.rename-dialog .dialog-actions{margin-top:24px}.campaign-entry>.secondary{min-height:44px;margin-right:10px}
 .combat-counter{text-align:center}.combat-counter h2{font:500 25px Georgia,serif}.combat-counter-value{display:block;font:600 62px/1.2 Georgia,serif;color:#efd49d;margin:18px 0}.combat-counter-actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}.combat-counter .error{margin-top:20px}.combat-counter-actions button{min-height:44px}
+.ability-action{display:block;font-size:16px;font-weight:700;line-height:1.5;color:#fff;margin-bottom:14px}
+.ability-roll{padding:10px;margin:12px 0;border-radius:8px;font-size:13px;line-height:1.6}.ability-roll-title{font-size:13px;padding-bottom:7px}
+.ability-roll-result{grid-template-columns:48px minmax(0,1fr);gap:8px;padding:8px 0}.ability-roll-label{font-size:12px;padding:2px 4px;border-radius:4px}
+.ability-distance,.ability-target{display:block;width:fit-content;max-width:100%;margin:8px auto 8px 0;padding:7px 10px;background:#fff;color:#33232b;border:1px solid #e5dce0;border-radius:0;text-align:left;font-size:13px;line-height:1.5}
+.ability-distance strong,.ability-target strong{display:inline;font-weight:700;margin:0}
+@media(max-width:440px){.ability-roll{padding:9px}.ability-roll-result{grid-template-columns:44px minmax(0,1fr);gap:6px}}

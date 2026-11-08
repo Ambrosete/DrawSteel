@@ -44,9 +44,19 @@ test('se destacan todas las palabras clave de la línea y también las habilidad
   assert.ok(blocks.some(b => b.kind === 'text' && b.text.startsWith('Effect: Ranged')))
 })
 
-test('Distance aparece una vez en cada habilidad y conserva sus continuaciones sin incluir los objetivos', () => {
-  for (const ability of abilities) assert.equal(formatAbilityText(ability.details).filter(b => b.kind === 'distance').length, 1, ability.name)
+test('cada habilidad conserva su acción, Distance y Target sin mezclarlos con los efectos', () => {
+  for (const ability of abilities) {
+    const blocks = formatAbilityText(ability.details)
+    for (const kind of ['action', 'distance', 'target']) assert.equal(blocks.filter(b => b.kind === kind).length, 1, `${ability.name}: ${kind}`)
+  }
   const blocks = formatAbilityText('A description.\nMagic, Ranged\nMain action\nDistance: Melee 1 or\nranged 10\nx One enemy\nEffect: Move.')
   assert.deepEqual(blocks.find(b => b.kind === 'distance'), { kind: 'distance', text: 'Distance: Melee 1 or ranged 10' })
-  assert.ok(blocks.some(b => b.kind === 'text' && b.text === 'x One enemy'))
+  assert.ok(blocks.some(b => b.kind === 'target' && b.text === 'x One enemy'))
+})
+
+test('los objetivos de varias líneas se mantienen completos y separados de la tirada', () => {
+  const blocks = formatAbilityText('Description.\nMagic, Ranged\nFree triggered\nDistance: Ranged 10\nx One creature or\nobject in range\nPower Roll + Reason:\n≤11: 1 damage\n12–16: 2 damage\n17+: 3 damage')
+  assert.deepEqual(blocks.find(b => b.kind === 'action'), { kind: 'action', text: 'Free triggered' })
+  assert.deepEqual(blocks.find(b => b.kind === 'target'), { kind: 'target', text: 'x One creature or object in range' })
+  assert.equal(blocks.filter(b => b.kind === 'roll').length, 1)
 })

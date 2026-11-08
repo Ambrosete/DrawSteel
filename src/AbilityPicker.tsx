@@ -3,21 +3,33 @@ import type { Ability } from './ability-catalog'
 import { abilitySlots, slotOptions, subclassOptions } from './progression'
 import type { Training } from './progression'
 import { formatAbilityText } from './ability-text'
+import type { AbilityTextBlock } from './ability-text'
 
-function AbilityText({ details }: { details: string }) {
-  return <span className="ability-card-text">{formatAbilityText(details).map((block, index) => block.kind === 'roll'
+function AbilityText({ blocks }: { blocks: AbilityTextBlock[] }) {
+  const body = blocks.filter(block => block.kind !== 'action')
+  const targetIndex = body.findIndex(block => block.kind === 'target')
+  const distanceIndex = body.findIndex(block => block.kind === 'distance')
+  if (targetIndex >= 0 && targetIndex < distanceIndex) {
+    const [target] = body.splice(targetIndex, 1)
+    body.splice(body.findIndex(block => block.kind === 'distance') + 1, 0, target)
+  }
+  return <span className="ability-card-text">{body.map((block, index) => block.kind === 'roll'
     ? <span className="ability-roll" role="group" aria-label={block.title} key={index}><span className="ability-roll-title">{block.title}</span>{block.tiers.map((result, tierIndex) => <span className="ability-roll-result" key={tierIndex}><strong className="ability-roll-label">{result.label}</strong><span>{result.text}</span></span>)}</span>
     : block.kind === 'quote'
       ? <span className="ability-flavor" key={index}><em>{block.text}</em></span>
       : block.kind === 'keywords'
         ? <strong className="ability-keywords" key={index}>{block.text}</strong>
         : block.kind === 'distance'
-          ? <span className="ability-distance" key={index}><strong>Distance:</strong><span>{block.text.replace(/^Distance\s*:\s*/i, '')}</span></span>
-          : <span className="ability-paragraph" key={index}>{block.text}</span>)}</span>
+          ? <span className="ability-distance" key={index}><strong>Distance:</strong>{' '}{block.text.replace(/^Distance\s*:\s*/i, '')}</span>
+          : block.kind === 'target'
+            ? <span className="ability-target" key={index}><strong>Target:</strong>{' '}{block.text.replace(/^x\s+/i, '')}</span>
+            : <span className="ability-paragraph" key={index}>{block.text}</span>)}</span>
 }
 
 function AbilityCardContent({ ability }: { ability: Ability }) {
-  return <span className="ability-card-content"><span className="ability-card-heading"><span className="ability-card-name">{ability.name}</span><span className="ability-card-cost">{ability.cost ? `${ability.cost} ${ability.resource}` : 'Sin coste'}</span></span><span className="ability-card-meta">{ability.heroClass}{ability.subclass ? ` · ${ability.subclass}` : ''}{ability.kit ? ` · ${ability.kit}` : ''} · Manual p. {ability.bookPage}</span><AbilityText details={ability.details} /></span>
+  const blocks = formatAbilityText(ability.details)
+  const actions = blocks.filter(block => block.kind === 'action')
+  return <span className="ability-card-content">{actions.map((block, index) => <strong className="ability-action" key={index}>{'text' in block ? block.text : ''}</strong>)}<span className="ability-card-heading"><span className="ability-card-name">{ability.name}</span><span className="ability-card-cost">{ability.cost ? `${ability.cost} ${ability.resource}` : 'Sin coste'}</span></span><span className="ability-card-meta">{ability.heroClass}{ability.subclass ? ` · ${ability.subclass}` : ''}{ability.kit ? ` · ${ability.kit}` : ''} · Manual p. {ability.bookPage}</span><AbilityText blocks={blocks} /></span>
 }
 export function AbilityDetails({ ability }: { ability: Ability }) {
   return <article className="ability-card" aria-label={ability.name}><AbilityCardContent ability={ability} /></article>

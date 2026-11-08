@@ -1,9 +1,10 @@
 export type AbilityTextBlock =
-  | { kind: 'text' | 'quote' | 'keywords' | 'distance'; text: string }
+  | { kind: 'text' | 'quote' | 'keywords' | 'distance' | 'target' | 'action'; text: string }
   | { kind: 'roll'; title: string; tiers: { label: string; text: string }[] }
 
 const section = /^(?:Effect|Trigger|Special|Strained|Persistent\s+\d+|Spend\s+[^:]+|Mark Benefit)\s*:/i
-const metadata = /^(?:Distance\s*:|x\s|(?:Main action|Maneuver|Triggered action|Free triggered action|Free maneuver|Free action|Move action|No action|—)$)/i
+const action = /^(?:Main action|Maneuver|(?:Free )?Triggered(?: action)?|Free maneuver|Free action|Move(?: action)?|No action)$/i
+const metadata = /^(?:Distance\s*:|x\s|—$)/i
 const keywords = /^(?:[A-Za-z-]+,\s*)+[A-Za-z-]+$/
 const singleKeyword = /^(?:Area|Magic|Melee|Ranged|Strike|Weapon|Green|Rot|Fire|Void|Earth|Psionic|Charge|Chronopathy|Cryokinesis|Pyrokinesis|Telekinesis|Telepathy|Resopathy|Metamorphosis|Animapathy)$/i
 const tier = /^(≤\s*11|12\s*[–-]\s*16|17\s*\+|≥\s*17)\s*:\s*(.*)$/
@@ -19,14 +20,15 @@ export function formatAbilityText(details: string): AbilityTextBlock[] {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
     if (!line) { flush(); continue }
+    if (i < distanceIndex && action.test(line)) { flush(); blocks.push({ kind: 'action', text: reflow(line) }); continue }
     if (i < distanceIndex && (keywords.test(line) || singleKeyword.test(line))) {
       flush(); blocks.push({ kind: 'keywords', text: reflow(line) }); continue
     }
-    if (/^Distance\s*:/i.test(line)) {
+    if (/^Distance\s*:/i.test(line) || /^x\s+/i.test(line)) {
       flush()
       const range = [line]
-      while (i + 1 < lines.length && lines[i + 1] && !metadata.test(lines[i + 1]) && !section.test(lines[i + 1]) && !/^Power Roll\b/.test(lines[i + 1])) range.push(lines[++i])
-      blocks.push({ kind: 'distance', text: reflow(range.join(' ')) }); continue
+      while (i + 1 < lines.length && lines[i + 1] && !metadata.test(lines[i + 1]) && !action.test(lines[i + 1]) && !section.test(lines[i + 1]) && !/^Power Roll\b/.test(lines[i + 1])) range.push(lines[++i])
+      blocks.push({ kind: /^x\s+/i.test(line) ? 'target' : 'distance', text: reflow(range.join(' ')) }); continue
     }
     const quoteEnd = line.startsWith('“') ? '”' : line.startsWith('«') ? '»' : line.startsWith('"') ? '"' : null
     if (quoteEnd) {
